@@ -10,33 +10,40 @@
 // See FIREBASE_SETUP.md for the full step-by-step guide.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth }                from 'firebase/auth';
-import { getFirestore, Firestore }           from 'firebase/firestore';
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 
-// 🔴 Replace these values with your real Firebase project config.
 const firebaseConfig = {
-  apiKey:            'YOUR_API_KEY',
-  authDomain:        'YOUR_PROJECT_ID.firebaseapp.com',
-  projectId:         'YOUR_PROJECT_ID',
-  storageBucket:     'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId:             'YOUR_APP_ID',
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "your_api_key_here",
+  authDomain:
+    process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ||
+    "your_project_id.firebaseapp.com",
+  projectId:
+    process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "your_project_id_here",
+  storageBucket:
+    process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+    "your_project_id.appspot.com",
+  messagingSenderId:
+    process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ||
+    "your_sender_id_here",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "your_app_id_here",
 };
 
 // Remind developer if still using placeholder config
-if (__DEV__ && firebaseConfig.apiKey === 'YOUR_API_KEY') {
+if (__DEV__ && firebaseConfig.apiKey === "your_api_key_here") {
   console.warn(
-    '\n🔴 [WalletX] Firebase is NOT configured yet.\n' +
-    '   Open src/services/firebase.ts and replace the placeholder values.\n' +
-    '   Read FIREBASE_SETUP.md for the full guide.\n'
+    "\n🔴 [WalletX] Firebase is NOT configured yet.\n" +
+      "   Open .env and set up your environment variables.\n" +
+      "   Read FIREBASE_SETUP.md for the full guide.\n",
   );
 }
 
 // Prevent re-initializing on hot reload
-const app: FirebaseApp  = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const app: FirebaseApp =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const auth: Auth = getAuth(app);
-const db: Firestore   = getFirestore(app);
+const db: Firestore = getFirestore(app);
 
 export { auth, db };
 export default app;

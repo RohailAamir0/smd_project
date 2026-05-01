@@ -1,8 +1,8 @@
 // Convenience re-export + category-filtered selector hook
 
-import { useMemo }    from 'react';
-import { useWallet }  from '../context/WalletContext';
-import type { Transaction, TransactionType } from '../types';
+import { useMemo } from "react";
+import { useWallet } from "../context/WalletContext";
+import type { Transaction, TransactionType } from "../types";
 
 export { useWallet as useTransactions };
 
@@ -16,12 +16,14 @@ interface FilterOptions {
  *
  * @param {FilterOptions} filters
  */
-export function useFilteredTransactions(filters: FilterOptions = {}): Transaction[] {
+export function useFilteredTransactions(
+  filters: FilterOptions = {},
+): Transaction[] {
   const { transactions } = useWallet();
 
   return useMemo(() => {
     return transactions.filter((tx) => {
-      if (filters.type     && tx.type     !== filters.type)     return false;
+      if (filters.type && tx.type !== filters.type) return false;
       if (filters.category && tx.category !== filters.category) return false;
       return true;
     });
@@ -34,7 +36,9 @@ export function useFilteredTransactions(filters: FilterOptions = {}): Transactio
  *
  * @param {TransactionType} type
  */
-export function useCategoryTotals(type: TransactionType): { category: string; total: number }[] {
+export function useCategoryTotals(
+  type: TransactionType,
+): { category: string; total: number }[] {
   const { transactions } = useWallet();
 
   return useMemo(() => {

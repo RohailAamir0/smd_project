@@ -9,11 +9,11 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   User,
-  Unsubscribe
-} from 'firebase/auth';
+  Unsubscribe,
+} from "firebase/auth";
 
-import { auth }           from './firebase';
-import { createUserDoc }  from './firestore';
+import { auth } from "./firebase";
+import { createUserDoc } from "./firestore";
 
 /**
  * Register a new user with email + password.
@@ -24,9 +24,17 @@ import { createUserDoc }  from './firestore';
  * @param {string} name - display name shown in the app
  * @returns {Promise<User>}
  */
-export async function registerUser(email: string, password: string, name: string): Promise<User> {
-  const credential = await createUserWithEmailAndPassword(auth, email, password);
-  const user       = credential.user;
+export async function registerUser(
+  email: string,
+  password: string,
+  name: string,
+): Promise<User> {
+  const credential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password,
+  );
+  const user = credential.user;
 
   // Set the display name on the Firebase Auth profile
   await updateProfile(user, { displayName: name });
@@ -44,7 +52,10 @@ export async function registerUser(email: string, password: string, name: string
  * @param {string} password
  * @returns {Promise<User>}
  */
-export async function loginUser(email: string, password: string): Promise<User> {
+export async function loginUser(
+  email: string,
+  password: string,
+): Promise<User> {
   const credential = await signInWithEmailAndPassword(auth, email, password);
   return credential.user;
 }
@@ -72,6 +83,8 @@ export async function resetPassword(email: string): Promise<void> {
  * @param {function} callback - receives (user | null)
  * @returns {function} unsubscribe
  */
-export function subscribeToAuth(callback: (user: User | null) => void): Unsubscribe {
+export function subscribeToAuth(
+  callback: (user: User | null) => void,
+): Unsubscribe {
   return onAuthStateChanged(auth, callback);
 }

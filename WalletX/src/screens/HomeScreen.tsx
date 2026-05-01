@@ -1,36 +1,39 @@
 // ─── Home Screen ──────────────────────────────────────────────────────────────
 
-import React from 'react';
+import React from "react";
 import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, RefreshControl, Alert,
-} from 'react-native';
-import { SafeAreaView }           from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors  from '../constants/colors';
-import { Spacing, FontSize, FontWeight, Radius } from '../constants/theme';
-import BalanceCard      from '../components/BalanceCard';
-import TransactionItem  from '../components/TransactionItem';
-import ActionButton     from '../components/ActionButton';
-import SkeletonLoader   from '../components/SkeletonLoader';
-import { useAuth }      from '../context/AuthContext';
-import { useWallet }    from '../context/WalletContext';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { StackScreenProps } from '@react-navigation/stack';
-import type { TabParamList, AppStackParamList } from '../types';
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Colors from "../constants/colors";
+import { Spacing, FontSize, FontWeight, Radius } from "../constants/theme";
+import BalanceCard from "../components/BalanceCard";
+import TransactionItem from "../components/TransactionItem";
+import ActionButton from "../components/ActionButton";
+import SkeletonLoader from "../components/SkeletonLoader";
+import { useAuth } from "../context/AuthContext";
+import { useWallet } from "../context/WalletContext";
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+import { CompositeScreenProps } from "@react-navigation/native";
+import { StackScreenProps } from "@react-navigation/stack";
+import type { TabParamList, AppStackParamList } from "../types";
 
 type Props = CompositeScreenProps<
-  BottomTabScreenProps<TabParamList, 'Home'>,
+  BottomTabScreenProps<TabParamList, "Home">,
   StackScreenProps<AppStackParamList>
 >;
 
 export default function HomeScreen({ navigation }: Props) {
-  const { userProfile }  = useAuth();
-  const {
-    balance, recentTransactions,
-    totalIncome, totalExpenses, loading,
-  } = useWallet();
+  const { userProfile } = useAuth();
+  const { balance, recentTransactions, totalIncome, totalExpenses, loading } =
+    useWallet();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -42,9 +45,9 @@ export default function HomeScreen({ navigation }: Props) {
 
   const greeting = () => {
     const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
   };
 
   return (
@@ -53,21 +56,31 @@ export default function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
-            tintColor={Colors.accent1} colors={[Colors.accent1]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.accent1}
+            colors={[Colors.accent1]}
+          />
         }
       >
         {/* ── Top Bar ───────────────────────────────────────────────────────── */}
         <View style={styles.topBar}>
           <View>
             <Text style={styles.greeting}>{greeting()},</Text>
-            <Text style={styles.name}>{userProfile?.name ?? 'Friend'} 👋</Text>
+            <Text style={styles.name}>{userProfile?.name ?? "Friend"} 👋</Text>
           </View>
           <TouchableOpacity
             style={styles.notifBtn}
-            onPress={() => Alert.alert('Notifications', 'No new notifications.')}
+            onPress={() =>
+              Alert.alert("Notifications", "No new notifications.")
+            }
           >
-            <MaterialCommunityIcons name="bell-outline" size={24} color={Colors.text} />
+            <MaterialCommunityIcons
+              name="bell-outline"
+              size={24}
+              color={Colors.text}
+            />
           </TouchableOpacity>
         </View>
 
@@ -80,17 +93,40 @@ export default function HomeScreen({ navigation }: Props) {
 
         {/* ── Action Buttons ────────────────────────────────────────────────── */}
         <View style={styles.actions}>
-          <ActionButton icon="arrow-down-circle-outline" label="Top Up"    onPress={() => navigation.navigate('AddTransaction', { type: 'income' })}  gradient />
-          <ActionButton icon="arrow-up-circle-outline"   label="Transfer"  onPress={() => navigation.navigate('AddTransaction', { type: 'expense' })} />
-          <ActionButton icon="swap-horizontal"           label="Request"   onPress={() => {}} />
-          <ActionButton icon="dots-horizontal-circle-outline" label="More" onPress={() => navigation.navigate('Profile')} />
+          <ActionButton
+            icon="arrow-down-circle-outline"
+            label="Top Up"
+            onPress={() =>
+              navigation.navigate("AddTransaction", { type: "income" })
+            }
+            gradient
+          />
+          <ActionButton
+            icon="arrow-up-circle-outline"
+            label="Transfer"
+            onPress={() =>
+              navigation.navigate("AddTransaction", { type: "expense" })
+            }
+          />
+          <ActionButton
+            icon="swap-horizontal"
+            label="Request"
+            onPress={() => {}}
+          />
+          <ActionButton
+            icon="dots-horizontal-circle-outline"
+            label="More"
+            onPress={() => navigation.navigate("Profile")}
+          />
         </View>
 
         {/* ── Recent Transactions ───────────────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Transactions</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Transactions")}
+            >
               <Text style={styles.seeAll}>See all</Text>
             </TouchableOpacity>
           </View>
@@ -98,7 +134,7 @@ export default function HomeScreen({ navigation }: Props) {
           {loading ? (
             <SkeletonLoader count={4} />
           ) : recentTransactions.length === 0 ? (
-            <EmptyState onPress={() => navigation.navigate('AddTransaction')} />
+            <EmptyState onPress={() => navigation.navigate("AddTransaction")} />
           ) : (
             recentTransactions.map((tx) => (
               <TransactionItem
@@ -114,7 +150,7 @@ export default function HomeScreen({ navigation }: Props) {
       {/* ── FAB: Add Transaction ──────────────────────────────────────────────── */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('AddTransaction')}
+        onPress={() => navigation.navigate("AddTransaction")}
         activeOpacity={0.85}
       >
         <MaterialCommunityIcons name="plus" size={30} color={Colors.white} />
@@ -126,7 +162,11 @@ export default function HomeScreen({ navigation }: Props) {
 function EmptyState({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.empty} onPress={onPress}>
-      <MaterialCommunityIcons name="receipt-outline" size={48} color={Colors.textDim} />
+      <MaterialCommunityIcons
+        name="receipt-outline"
+        size={48}
+        color={Colors.textDim}
+      />
       <Text style={styles.emptyTitle}>No transactions yet</Text>
       <Text style={styles.emptySubtitle}>Tap + to add your first one</Text>
     </TouchableOpacity>
@@ -134,40 +174,83 @@ function EmptyState({ onPress }: { onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: Colors.background },
   scroll: { paddingBottom: 100 },
   topBar: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
-    paddingVertical:   Spacing.md,
+    paddingVertical: Spacing.md,
   },
-  greeting: { color: Colors.textMuted, fontSize: FontSize.sm, fontWeight: FontWeight.medium },
-  name:     { color: Colors.text, fontSize: FontSize.xl, fontWeight: FontWeight.extrabold },
+  greeting: {
+    color: Colors.textMuted,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+  },
+  name: {
+    color: Colors.text,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.extrabold,
+  },
   notifBtn: {
-    width: 42, height: 42, borderRadius: Radius.md,
-    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
-    alignItems: 'center', justifyContent: 'center',
+    width: 42,
+    height: 42,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
-  section:       { paddingHorizontal: Spacing.lg, marginTop: Spacing.lg },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
-  sectionTitle:  { color: Colors.text, fontSize: FontSize.lg, fontWeight: FontWeight.bold },
-  seeAll:        { color: Colors.accent1, fontSize: FontSize.sm, fontWeight: FontWeight.semibold },
-  fab: {
-    position: 'absolute', bottom: 28, right: 24,
-    width: 60, height: 60, borderRadius: 30,
-    backgroundColor: Colors.accent1,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: Colors.accent1, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5, shadowRadius: 16, elevation: 14,
+  section: { paddingHorizontal: Spacing.lg, marginTop: Spacing.lg },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
   },
-  empty: { alignItems: 'center', paddingVertical: Spacing.xxl, gap: Spacing.sm },
-  emptyTitle:    { color: Colors.textMuted, fontSize: FontSize.lg, fontWeight: FontWeight.semibold },
-  emptySubtitle: { color: Colors.textDim,   fontSize: FontSize.sm },
+  sectionTitle: {
+    color: Colors.text,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
+  },
+  seeAll: {
+    color: Colors.accent1,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+  },
+  fab: {
+    position: "absolute",
+    bottom: 28,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.accent1,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: Colors.accent1,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 14,
+  },
+  empty: {
+    alignItems: "center",
+    paddingVertical: Spacing.xxl,
+    gap: Spacing.sm,
+  },
+  emptyTitle: {
+    color: Colors.textMuted,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+  },
+  emptySubtitle: { color: Colors.textDim, fontSize: FontSize.sm },
 });

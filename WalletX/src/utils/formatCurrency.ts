@@ -4,11 +4,11 @@
  */
 export function formatCurrency(
   amount: number,
-  currency: string = 'USD',
-  locale:   string = 'en-US',
+  currency: string = "USD",
+  locale: string = "en-US",
 ): string {
   return new Intl.NumberFormat(locale, {
-    style:                 'currency',
+    style: "currency",
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -19,9 +19,12 @@ export function formatCurrency(
  * Sign-aware display string for transaction cards.
  * Income → "+ $50.00"   Expense → "- $50.00"
  */
-export function formatTransactionAmount(amount: number, type: 'income' | 'expense'): string {
+export function formatTransactionAmount(
+  amount: number,
+  type: "income" | "expense",
+): string {
   const formatted = formatCurrency(Math.abs(amount));
-  return type === 'income' ? `+ ${formatted}` : `- ${formatted}`;
+  return type === "income" ? `+ ${formatted}` : `- ${formatted}`;
 }
 
 /**
@@ -29,10 +32,10 @@ export function formatTransactionAmount(amount: number, type: 'income' | 'expens
  * e.g. 1234567 → "$1.2M"
  */
 export function formatCompact(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style:                'currency',
-    currency:             'USD',
-    notation:             'compact',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
     maximumFractionDigits: 1,
   }).format(amount);
 }

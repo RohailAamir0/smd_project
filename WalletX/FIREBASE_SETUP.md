@@ -15,7 +15,7 @@ Follow these steps to connect WalletX to a real Firebase backend.
 
 ## Step 2 — Register a Web App
 
-1. In your project dashboard, click the **Web icon `</>`**
+1. In your project dashboard, click the Add App Button and then the **Web icon `</>`**
 2. Give your app a nickname (e.g. `WalletX`)
 3. Click **"Register app"**
 4. Copy the `firebaseConfig` object shown — you'll need these values
@@ -23,25 +23,9 @@ Follow these steps to connect WalletX to a real Firebase backend.
 ---
 
 ## Step 3 — Add Config to the App
-
-Open `src/services/firebase.js` and replace the placeholder values:
-
-```js
-const firebaseConfig = {
-  apiKey:            'PASTE_YOUR_API_KEY',
-  authDomain:        'your-project-id.firebaseapp.com',
-  projectId:         'your-project-id',
-  storageBucket:     'your-project-id.appspot.com',
-  messagingSenderId: 'PASTE_SENDER_ID',
-  appId:             'PASTE_APP_ID',
-};
-```
-
-Or use environment variables (recommended):
-
 1. Copy `.env.example` → `.env`
 2. Fill in your values with the `EXPO_PUBLIC_` prefix
-3. Update `firebase.js` to read from `process.env`:
+3. Refer to the code segment below to see how each environment variable maps
 
 ```js
 const firebaseConfig = {

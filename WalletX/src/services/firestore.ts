@@ -18,15 +18,15 @@ import {
   serverTimestamp,
   increment,
   runTransaction,
-  Unsubscribe
-} from 'firebase/firestore';
+  Unsubscribe,
+} from "firebase/firestore";
 
-import { db } from './firebase';
-import type { UserProfile, Transaction, NewTransactionData } from '../types';
+import { db } from "./firebase";
+import type { UserProfile, Transaction, NewTransactionData } from "../types";
 
 // ── Collection references ─────────────────────────────────────────────────────
-const usersCol        = () => collection(db, 'users');
-const transactionsCol = () => collection(db, 'transactions');
+const usersCol = () => collection(db, "users");
+const transactionsCol = () => collection(db, "transactions");
 
 // ─── User Document ────────────────────────────────────────────────────────────
 
@@ -36,8 +36,11 @@ const transactionsCol = () => collection(db, 'transactions');
  * @param {string} uid
  * @param {Omit<UserProfile, 'id' | 'createdAt'>} data
  */
-export async function createUserDoc(uid: string, data: Omit<UserProfile, 'id' | 'createdAt'>): Promise<void> {
-  await setDoc(doc(db, 'users', uid), {
+export async function createUserDoc(
+  uid: string,
+  data: Omit<UserProfile, "id" | "createdAt">,
+): Promise<void> {
+  await setDoc(doc(db, "users", uid), {
     ...data,
     createdAt: serverTimestamp(),
   });
@@ -50,8 +53,10 @@ export async function createUserDoc(uid: string, data: Omit<UserProfile, 'id' | 
  * @returns {Promise<UserProfile | null>}
  */
 export async function getUserDoc(uid: string): Promise<UserProfile | null> {
-  const snap = await getDoc(doc(db, 'users', uid));
-  return snap.exists() ? ({ id: snap.id, ...snap.data() } as UserProfile) : null;
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists()
+    ? ({ id: snap.id, ...snap.data() } as UserProfile)
+    : null;
 }
 
 /**
@@ -61,8 +66,11 @@ export async function getUserDoc(uid: string): Promise<UserProfile | null> {
  * @param {function} callback - receives the user data object
  * @returns {function} unsubscribe
  */
-export function subscribeToUser(uid: string, callback: (user: UserProfile) => void): Unsubscribe {
-  return onSnapshot(doc(db, 'users', uid), (snap) => {
+export function subscribeToUser(
+  uid: string,
+  callback: (user: UserProfile) => void,
+): Unsubscribe {
+  return onSnapshot(doc(db, "users", uid), (snap) => {
     if (snap.exists()) callback({ id: snap.id, ...snap.data() } as UserProfile);
   });
 }
@@ -76,25 +84,28 @@ export function subscribeToUser(uid: string, callback: (user: UserProfile) => vo
  * @param {NewTransactionData} txData
  * @returns {Promise<string>} The new transaction document id
  */
-export async function addTransaction(userId: string, txData: NewTransactionData): Promise<string> {
+export async function addTransaction(
+  userId: string,
+  txData: NewTransactionData,
+): Promise<string> {
   const balanceDelta =
-    txData.type === 'income' ? txData.amount : -txData.amount;
+    txData.type === "income" ? txData.amount : -txData.amount;
 
-  let newTxId = '';
+  let newTxId = "";
 
   await runTransaction(db, async (tx) => {
     // 1. Add the transaction document
     const txRef = doc(transactionsCol());
-    newTxId     = txRef.id;
+    newTxId = txRef.id;
     tx.set(txRef, {
       userId,
       ...txData,
-      date:      serverTimestamp(),
+      date: serverTimestamp(),
       createdAt: serverTimestamp(),
     });
 
     // 2. Update the user balance atomically
-    const userRef = doc(db, 'users', userId);
+    const userRef = doc(db, "users", userId);
     tx.update(userRef, { balance: increment(balanceDelta) });
   });
 
@@ -108,13 +119,17 @@ export async function addTransaction(userId: string, txData: NewTransactionData)
  * @param {Pick<Transaction, 'type' | 'amount'>} txData
  * @param {string} userId
  */
-export async function deleteTransaction(txId: string, txData: Pick<Transaction, 'type' | 'amount'>, userId: string): Promise<void> {
+export async function deleteTransaction(
+  txId: string,
+  txData: Pick<Transaction, "type" | "amount">,
+  userId: string,
+): Promise<void> {
   const balanceDelta =
-    txData.type === 'income' ? -txData.amount : txData.amount;
+    txData.type === "income" ? -txData.amount : txData.amount;
 
   await runTransaction(db, async (tx) => {
-    tx.delete(doc(db, 'transactions', txId));
-    tx.update(doc(db, 'users', userId), { balance: increment(balanceDelta) });
+    tx.delete(doc(db, "transactions", txId));
+    tx.update(doc(db, "users", userId), { balance: increment(balanceDelta) });
   });
 }
 
@@ -125,15 +140,18 @@ export async function deleteTransaction(txId: string, txData: Pick<Transaction, 
  * @param {number} limitCount
  * @returns {Promise<Transaction[]>}
  */
-export async function getRecentTransactions(userId: string, limitCount: number = 5): Promise<Transaction[]> {
-  const q    = query(
+export async function getRecentTransactions(
+  userId: string,
+  limitCount: number = 5,
+): Promise<Transaction[]> {
+  const q = query(
     transactionsCol(),
-    where('userId', '==', userId),
-    orderBy('date', 'desc'),
-    limit(limitCount)
+    where("userId", "==", userId),
+    orderBy("date", "desc"),
+    limit(limitCount),
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction);
 }
 
 /**
@@ -143,14 +161,19 @@ export async function getRecentTransactions(userId: string, limitCount: number =
  * @param {function} callback - receives array of transaction objects
  * @returns {function} unsubscribe
  */
-export function subscribeToTransactions(userId: string, callback: (txs: Transaction[]) => void): Unsubscribe {
+export function subscribeToTransactions(
+  userId: string,
+  callback: (txs: Transaction[]) => void,
+): Unsubscribe {
   const q = query(
     transactionsCol(),
-    where('userId', '==', userId),
-    orderBy('date', 'desc')
+    where("userId", "==", userId),
+    orderBy("date", "desc"),
   );
   return onSnapshot(q, (snap) => {
-    const txs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
+    const txs = snap.docs.map(
+      (d) => ({ id: d.id, ...d.data() }) as Transaction,
+    );
     callback(txs);
   });
 }
@@ -162,13 +185,16 @@ export function subscribeToTransactions(userId: string, callback: (txs: Transact
  * @param {string} category
  * @returns {Promise<Transaction[]>}
  */
-export async function getTransactionsByCategory(userId: string, category: string): Promise<Transaction[]> {
-  const q    = query(
+export async function getTransactionsByCategory(
+  userId: string,
+  category: string,
+): Promise<Transaction[]> {
+  const q = query(
     transactionsCol(),
-    where('userId',   '==', userId),
-    where('category', '==', category),
-    orderBy('date', 'desc')
+    where("userId", "==", userId),
+    where("category", "==", category),
+    orderBy("date", "desc"),
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction);
 }

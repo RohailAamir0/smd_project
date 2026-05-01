@@ -1,17 +1,21 @@
 // ─── TransactionItem ──────────────────────────────────────────────────────────
 // A single row in the transaction list.
 
-import React, { useRef } from 'react';
+import React, { useRef } from "react";
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated,
-} from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors               from '../constants/colors';
-import { Spacing, Radius, FontSize, FontWeight } from '../constants/theme';
-import { formatTransactionAmount } from '../utils/formatCurrency';
-import { formatRelativeDate }      from '../utils/formatDate';
-import { getCategoryById }         from '../utils/categories';
-import type { Transaction } from '../types';
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Colors from "../constants/colors";
+import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
+import { formatTransactionAmount } from "../utils/formatCurrency";
+import { formatRelativeDate } from "../utils/formatDate";
+import { getCategoryById } from "../utils/categories";
+import type { Transaction } from "../types";
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -19,15 +23,19 @@ interface TransactionItemProps {
   onLongPress?: () => void;
 }
 
-export default function TransactionItem({ transaction, onPress, onLongPress }: TransactionItemProps) {
+export default function TransactionItem({
+  transaction,
+  onPress,
+  onLongPress,
+}: TransactionItemProps) {
   const category = getCategoryById(transaction.category);
-  const isIncome = transaction.type === 'income';
-  const scale    = useRef(new Animated.Value(1)).current;
+  const isIncome = transaction.type === "income";
+  const scale = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn  = () =>
+  const handlePressIn = () =>
     Animated.spring(scale, { toValue: 0.97, useNativeDriver: true }).start();
   const handlePressOut = () =>
-    Animated.spring(scale, { toValue: 1,    useNativeDriver: true }).start();
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
 
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
@@ -40,8 +48,14 @@ export default function TransactionItem({ transaction, onPress, onLongPress }: T
         activeOpacity={0.85}
       >
         {/* Category Icon */}
-        <View style={[styles.iconWrap, { backgroundColor: category.color + '25' }]}>
-          <MaterialCommunityIcons name={category.icon as any} size={22} color={category.color} />
+        <View
+          style={[styles.iconWrap, { backgroundColor: category.color + "25" }]}
+        >
+          <MaterialCommunityIcons
+            name={category.icon as any}
+            size={22}
+            color={category.color}
+          />
         </View>
 
         {/* Label + date */}
@@ -57,7 +71,12 @@ export default function TransactionItem({ transaction, onPress, onLongPress }: T
         </View>
 
         {/* Amount */}
-        <Text style={[styles.amount, { color: isIncome ? Colors.income : Colors.expense }]}>
+        <Text
+          style={[
+            styles.amount,
+            { color: isIncome ? Colors.income : Colors.expense },
+          ]}
+        >
           {formatTransactionAmount(transaction.amount, transaction.type)}
         </Text>
       </TouchableOpacity>
@@ -67,35 +86,37 @@ export default function TransactionItem({ transaction, onPress, onLongPress }: T
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection:   'row',
-    alignItems:      'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     backgroundColor: Colors.card,
-    borderRadius:    Radius.md,
-    marginBottom:    Spacing.sm,
-    borderWidth:     1,
-    borderColor:     Colors.border,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   iconWrap: {
-    width: 44, height: 44,
+    width: 44,
+    height: 44,
     borderRadius: Radius.md,
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: Spacing.md,
   },
-  info:  { flex: 1 },
+  info: { flex: 1 },
   title: {
-    color:      Colors.text,
-    fontSize:   FontSize.md,
+    color: Colors.text,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     marginBottom: 2,
   },
   date: {
-    color:    Colors.textMuted,
+    color: Colors.textMuted,
     fontSize: FontSize.xs,
   },
   amount: {
-    fontSize:   FontSize.md,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
   },
 });

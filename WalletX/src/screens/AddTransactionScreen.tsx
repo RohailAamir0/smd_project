@@ -1,37 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  View, Text, StyleSheet, TextInput,
-  TouchableOpacity, ScrollView,
-  KeyboardAvoidingView, Platform, Alert,
-} from 'react-native';
-import { SafeAreaView }           from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors  from '../constants/colors';
-import { Spacing, Radius, FontSize, FontWeight } from '../constants/theme';
-import GradientButton from '../components/GradientButton';
-import { useWallet }  from '../context/WalletContext';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../utils/categories';
-import { StackScreenProps } from '@react-navigation/stack';
-import type { AppStackParamList, TransactionType } from '../types';
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Colors from "../constants/colors";
+import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
+import GradientButton from "../components/GradientButton";
+import { useWallet } from "../context/WalletContext";
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../utils/categories";
+import { StackScreenProps } from "@react-navigation/stack";
+import type { AppStackParamList, TransactionType } from "../types";
 
-type Props = StackScreenProps<AppStackParamList, 'AddTransaction'>;
+type Props = StackScreenProps<AppStackParamList, "AddTransaction">;
 
 export default function AddTransactionScreen({ navigation, route }: Props) {
   const { addTransaction } = useWallet();
-  const [type,     setType]     = useState<TransactionType>(route?.params?.type ?? 'expense');
-  const [amount,   setAmount]   = useState('');
-  const [category, setCategory] = useState('');
-  const [note,     setNote]     = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [errors,   setErrors]   = useState<Record<string, string>>({});
+  const [type, setType] = useState<TransactionType>(
+    route?.params?.type ?? "expense",
+  );
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const validate = () => {
     const e: Record<string, string> = {};
     const parsed = parseFloat(amount);
-    if (!amount || isNaN(parsed) || parsed <= 0) e.amount   = 'Enter a valid amount';
-    if (!category)                               e.category = 'Select a category';
+    if (!amount || isNaN(parsed) || parsed <= 0)
+      e.amount = "Enter a valid amount";
+    if (!category) e.category = "Select a category";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -42,14 +51,14 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
     try {
       await addTransaction({
         type,
-        amount:   parseFloat(parseFloat(amount).toFixed(2)),
+        amount: parseFloat(parseFloat(amount).toFixed(2)),
         category,
-        note:     note.trim(),
-        date:     new Date(),
+        note: note.trim(),
+        date: new Date(),
       });
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      Alert.alert("Error", err.message);
     } finally {
       setLoading(false);
     }
@@ -57,13 +66,25 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-              <MaterialCommunityIcons name="arrow-left" size={24} color={Colors.text} />
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backBtn}
+            >
+              <MaterialCommunityIcons
+                name="arrow-left"
+                size={24}
+                color={Colors.text}
+              />
             </TouchableOpacity>
             <Text style={styles.title}>Add Transaction</Text>
             <View style={{ width: 40 }} />
@@ -71,18 +92,34 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
 
           {/* Type Toggle */}
           <View style={styles.typeRow}>
-            {(['expense', 'income'] as TransactionType[]).map((t) => (
+            {(["expense", "income"] as TransactionType[]).map((t) => (
               <TouchableOpacity
                 key={t}
-                style={[styles.typeBtn, type === t && { backgroundColor: t === 'income' ? Colors.income : Colors.expense }]}
-                onPress={() => { setType(t); setCategory(''); }}
+                style={[
+                  styles.typeBtn,
+                  type === t && {
+                    backgroundColor:
+                      t === "income" ? Colors.income : Colors.expense,
+                  },
+                ]}
+                onPress={() => {
+                  setType(t);
+                  setCategory("");
+                }}
               >
                 <MaterialCommunityIcons
-                  name={t === 'income' ? 'arrow-down-circle' : 'arrow-up-circle'}
+                  name={
+                    t === "income" ? "arrow-down-circle" : "arrow-up-circle"
+                  }
                   size={18}
                   color={type === t ? Colors.white : Colors.textMuted}
                 />
-                <Text style={[styles.typeTxt, type === t && { color: Colors.white }]}>
+                <Text
+                  style={[
+                    styles.typeTxt,
+                    type === t && { color: Colors.white },
+                  ]}
+                >
                   {t.charAt(0).toUpperCase() + t.slice(1)}
                 </Text>
               </TouchableOpacity>
@@ -110,15 +147,34 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
             {categories.map((cat) => (
               <TouchableOpacity
                 key={cat.id}
-                style={[styles.catBtn, category === cat.id && { borderColor: cat.color, backgroundColor: cat.color + '22' }]}
+                style={[
+                  styles.catBtn,
+                  category === cat.id && {
+                    borderColor: cat.color,
+                    backgroundColor: cat.color + "22",
+                  },
+                ]}
                 onPress={() => setCategory(cat.id)}
               >
-                <MaterialCommunityIcons name={cat.icon as any} size={22} color={category === cat.id ? cat.color : Colors.textMuted} />
-                <Text style={[styles.catLabel, category === cat.id && { color: cat.color }]}>{cat.label}</Text>
+                <MaterialCommunityIcons
+                  name={cat.icon as any}
+                  size={22}
+                  color={category === cat.id ? cat.color : Colors.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.catLabel,
+                    category === cat.id && { color: cat.color },
+                  ]}
+                >
+                  {cat.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
-          {errors.category && <Text style={styles.errText}>{errors.category}</Text>}
+          {errors.category && (
+            <Text style={styles.errText}>{errors.category}</Text>
+          )}
 
           {/* Note */}
           <Text style={styles.sectionLabel}>Note (optional)</Text>
@@ -137,7 +193,11 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
             label="Save Transaction"
             onPress={handleSubmit}
             loading={loading}
-            colors={type === 'income' ? [Colors.income, '#059669'] : Colors.gradientPrimary}
+            colors={
+              type === "income"
+                ? [Colors.income, "#059669"]
+                : Colors.gradientPrimary
+            }
             style={styles.submitBtn}
           />
         </ScrollView>
@@ -147,22 +207,110 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe:         { flex: 1, backgroundColor: Colors.background },
-  scroll:       { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
-  header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.md },
-  backBtn:      { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
-  title:        { color: Colors.text, fontSize: FontSize.lg, fontWeight: FontWeight.bold },
-  typeRow:      { flexDirection: 'row', backgroundColor: Colors.card, borderRadius: Radius.lg, padding: 4, borderWidth: 1, borderColor: Colors.border, marginBottom: Spacing.lg },
-  typeBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: 10, borderRadius: Radius.md },
-  typeTxt:      { color: Colors.textMuted, fontSize: FontSize.md, fontWeight: FontWeight.semibold },
-  amountWrap:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.xs },
-  currencySign: { color: Colors.textMuted, fontSize: FontSize.xxl, fontWeight: FontWeight.bold, marginRight: 4 },
-  amountInput:  { color: Colors.text, fontSize: 52, fontWeight: FontWeight.extrabold, minWidth: 120, textAlign: 'center' },
-  sectionLabel: { color: Colors.textMuted, fontSize: FontSize.sm, fontWeight: FontWeight.semibold, marginBottom: Spacing.sm, marginTop: Spacing.md },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  catBtn:       { width: '30%', alignItems: 'center', paddingVertical: Spacing.sm, backgroundColor: Colors.card, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, gap: 4 },
-  catLabel:     { color: Colors.textMuted, fontSize: FontSize.xs, fontWeight: FontWeight.medium, textAlign: 'center' },
-  noteInput:    { backgroundColor: Colors.card, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, color: Colors.text, fontSize: FontSize.md, minHeight: 80 },
-  errText:      { color: Colors.expense, fontSize: FontSize.xs, marginBottom: Spacing.xs },
-  submitBtn:    { marginTop: Spacing.lg },
+  safe: { flex: 1, backgroundColor: Colors.background },
+  scroll: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.md,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: {
+    color: Colors.text,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
+  },
+  typeRow: {
+    flexDirection: "row",
+    backgroundColor: Colors.card,
+    borderRadius: Radius.lg,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.lg,
+  },
+  typeBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: 10,
+    borderRadius: Radius.md,
+  },
+  typeTxt: {
+    color: Colors.textMuted,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+  },
+  amountWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xs,
+  },
+  currencySign: {
+    color: Colors.textMuted,
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.bold,
+    marginRight: 4,
+  },
+  amountInput: {
+    color: Colors.text,
+    fontSize: 52,
+    fontWeight: FontWeight.extrabold,
+    minWidth: 120,
+    textAlign: "center",
+  },
+  sectionLabel: {
+    color: Colors.textMuted,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
+  catBtn: {
+    width: "30%",
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 4,
+  },
+  catLabel: {
+    color: Colors.textMuted,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.medium,
+    textAlign: "center",
+  },
+  noteInput: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    color: Colors.text,
+    fontSize: FontSize.md,
+    minHeight: 80,
+  },
+  errText: {
+    color: Colors.expense,
+    fontSize: FontSize.xs,
+    marginBottom: Spacing.xs,
+  },
+  submitBtn: { marginTop: Spacing.lg },
 });

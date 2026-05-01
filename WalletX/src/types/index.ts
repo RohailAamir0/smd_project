@@ -1,6 +1,6 @@
 // ─── WalletX — Shared Types ───────────────────────────────────────────────────
 
-import type { User } from 'firebase/auth';
+import type { User } from "firebase/auth";
 
 // ── Firestore helpers ─────────────────────────────────────────────────────────
 
@@ -13,91 +13,94 @@ export type DateLike = Date | FirestoreTimestamp;
 
 // ── Domain models ─────────────────────────────────────────────────────────────
 
-export type TransactionType = 'income' | 'expense';
+export type TransactionType = "income" | "expense";
 
 export interface Transaction {
-  id:         string;
-  userId:     string;
-  type:       TransactionType;
-  category:   string;
-  amount:     number;
-  note:       string;
-  date:       DateLike;
+  id: string;
+  userId: string;
+  type: TransactionType;
+  category: string;
+  amount: number;
+  note: string;
+  date: DateLike;
   createdAt?: DateLike;
 }
 
 export interface UserProfile {
-  id:        string;
-  name:      string;
-  email:     string;
-  balance:   number;
+  id: string;
+  name: string;
+  email: string;
+  balance: number;
   createdAt?: DateLike;
 }
 
 export interface Category {
-  id:    string;
+  id: string;
   label: string;
-  icon:  string;
+  icon: string;
   color: string;
-  type:  TransactionType;
+  type: TransactionType;
 }
 
 // ── Auth Context ───────────────────────────────────────────────────────────────
 
 export interface AuthContextType {
-  user:        User | null;
+  user: User | null;
   userProfile: UserProfile | null;
-  loading:     boolean;
-  isLoggedIn:  boolean;
+  loading: boolean;
+  isLoggedIn: boolean;
 }
 
 // ── Wallet Context ─────────────────────────────────────────────────────────────
 
 export interface NewTransactionData {
-  type:     TransactionType;
+  type: TransactionType;
   category: string;
-  amount:   number;
-  note:     string;
-  date:     Date;
+  amount: number;
+  note: string;
+  date: Date;
 }
 
 export interface WalletState {
   transactions: Transaction[];
-  balance:      number;
-  loading:      boolean;
-  error:        string | null;
+  balance: number;
+  loading: boolean;
+  error: string | null;
 }
 
 export type WalletAction =
-  | { type: 'SET_TRANSACTIONS'; payload: Transaction[] }
-  | { type: 'SET_BALANCE';      payload: number }
-  | { type: 'SET_ERROR';        payload: string }
-  | { type: 'SET_LOADING';      payload: boolean };
+  | { type: "SET_TRANSACTIONS"; payload: Transaction[] }
+  | { type: "SET_BALANCE"; payload: number }
+  | { type: "SET_ERROR"; payload: string }
+  | { type: "SET_LOADING"; payload: boolean };
 
 export interface WalletContextType extends WalletState {
   recentTransactions: Transaction[];
-  totalIncome:        number;
-  totalExpenses:      number;
-  addTransaction:    (data: NewTransactionData) => Promise<void>;
-  deleteTransaction: (txId: string, txData: Pick<Transaction, 'type' | 'amount'>) => Promise<void>;
+  totalIncome: number;
+  totalExpenses: number;
+  addTransaction: (data: NewTransactionData) => Promise<void>;
+  deleteTransaction: (
+    txId: string,
+    txData: Pick<Transaction, "type" | "amount">,
+  ) => Promise<void>;
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 
 export type AuthStackParamList = {
   Onboarding: undefined;
-  Login:      undefined;
-  Signup:     undefined;
+  Login: undefined;
+  Signup: undefined;
 };
 
 export type AppStackParamList = {
-  Main:           undefined;
+  Main: undefined;
   AddTransaction: { type?: TransactionType } | undefined;
 };
 
 export type TabParamList = {
-  Home:         undefined;
+  Home: undefined;
   Transactions: undefined;
-  Statistics:   undefined;
-  Profile:      undefined;
+  Statistics: undefined;
+  Profile: undefined;
 };
