@@ -163,7 +163,7 @@ function EmptyState({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.empty} onPress={onPress}>
       <MaterialCommunityIcons
-        name="receipt-outline"
+        name="file-document-outline"
         size={48}
         color={Colors.textDim}
       />

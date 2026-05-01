@@ -170,7 +170,7 @@ export default function TransactionsScreen({ navigation }: Props) {
           ListEmptyComponent={
             <View style={styles.empty}>
               <MaterialCommunityIcons
-                name="receipt-outline"
+                name="file-document-outline"
                 size={52}
                 color={Colors.textDim}
               />
