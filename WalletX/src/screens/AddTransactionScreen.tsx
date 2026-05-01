@@ -8,13 +8,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Colors from "../constants/colors";
 import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
 import GradientButton from "../components/GradientButton";
+import ErrorMessage from "../components/ErrorMessage";
 import { useWallet } from "../context/WalletContext";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../utils/categories";
 import { StackScreenProps } from "@react-navigation/stack";
@@ -32,6 +32,7 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState("");
 
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
@@ -48,6 +49,7 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
+    setGeneralError("");
     try {
       await addTransaction({
         type,
@@ -58,7 +60,7 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
       });
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      setGeneralError(err.message);
     } finally {
       setLoading(false);
     }
@@ -188,6 +190,8 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
             multiline
             maxLength={120}
           />
+
+          <ErrorMessage message={generalError} />
 
           <GradientButton
             label="Save Transaction"

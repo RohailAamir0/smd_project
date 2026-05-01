@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../constants/colors";
 import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
 import GradientButton from "../components/GradientButton";
+import ErrorMessage from "../components/ErrorMessage";
 import { loginUser, resetPassword } from "../services/auth";
 import { StackScreenProps } from "@react-navigation/stack";
 import type { AuthStackParamList } from "../types";
@@ -31,6 +32,7 @@ export default function LoginScreen({ navigation }: Props) {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState("");
 
   // ── Validation ───────────────────────────────────────────────────────────────
   const validate = () => {
@@ -48,11 +50,12 @@ export default function LoginScreen({ navigation }: Props) {
   const handleLogin = async () => {
     if (!validate()) return;
     setLoading(true);
+    setGeneralError("");
     try {
       await loginUser(email.trim(), password);
       // Navigation handled by AppNavigator via auth state change
     } catch (err: any) {
-      Alert.alert("Login Failed", err.message);
+      setGeneralError(err.message);
     } finally {
       setLoading(false);
     }
@@ -60,14 +63,15 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleForgot = async () => {
     if (!email.trim()) {
-      Alert.alert("Reset Password", "Enter your email address first.");
+      setGeneralError("Enter your email address first.");
       return;
     }
+    setGeneralError("");
     try {
       await resetPassword(email.trim());
       Alert.alert("Email Sent", "Check your inbox for the reset link.");
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      setGeneralError(err.message);
     }
   };
 
@@ -127,6 +131,8 @@ export default function LoginScreen({ navigation }: Props) {
               <TouchableOpacity onPress={handleForgot} style={styles.forgot}>
                 <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
+
+              <ErrorMessage message={generalError} />
 
               <GradientButton
                 label="Sign In"

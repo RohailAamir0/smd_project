@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   TextInputProps,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../constants/colors";
 import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
 import GradientButton from "../components/GradientButton";
+import ErrorMessage from "../components/ErrorMessage";
 import { registerUser } from "../services/auth";
 import { StackScreenProps } from "@react-navigation/stack";
 import type { AuthStackParamList } from "../types";
@@ -33,6 +33,7 @@ export default function SignupScreen({ navigation }: Props) {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState("");
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -49,11 +50,12 @@ export default function SignupScreen({ navigation }: Props) {
   const handleSignup = async () => {
     if (!validate()) return;
     setLoading(true);
+    setGeneralError("");
     try {
       await registerUser(email.trim(), password, name.trim());
       // AppNavigator will redirect to Home automatically via auth state
     } catch (err: any) {
-      Alert.alert("Signup Failed", err.message);
+      setGeneralError(err.message);
     } finally {
       setLoading(false);
     }
@@ -127,6 +129,8 @@ export default function SignupScreen({ navigation }: Props) {
                 secureTextEntry={!showPwd}
                 error={errors.confirm}
               />
+
+              <ErrorMessage message={generalError} />
 
               <GradientButton
                 label="Create Account"

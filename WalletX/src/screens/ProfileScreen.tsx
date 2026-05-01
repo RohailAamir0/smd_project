@@ -16,6 +16,7 @@ import Colors from "../constants/colors";
 import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useWallet } from "../context/WalletContext";
+import ErrorMessage from "../components/ErrorMessage";
 import { logoutUser } from "../services/auth";
 import { formatCurrency } from "../utils/formatCurrency";
 
@@ -23,6 +24,7 @@ export default function ProfileScreen() {
   const { user, userProfile } = useAuth();
   const { balance, totalIncome, totalExpenses, transactions } = useWallet();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [generalError, setGeneralError] = useState("");
 
   const handleLogout = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -32,10 +34,11 @@ export default function ProfileScreen() {
         style: "destructive",
         onPress: async () => {
           setLoggingOut(true);
+          setGeneralError("");
           try {
             await logoutUser();
           } catch (e: any) {
-            Alert.alert("Error", e.message);
+            setGeneralError(e.message);
             setLoggingOut(false);
           }
         },
@@ -148,6 +151,8 @@ export default function ProfileScreen() {
             </React.Fragment>
           ))}
         </View>
+
+        <ErrorMessage message={generalError} />
 
         {/* Sign Out */}
         <TouchableOpacity
