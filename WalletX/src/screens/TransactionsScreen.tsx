@@ -1,7 +1,7 @@
 // ─── Transactions Screen ──────────────────────────────────────────────────────
 // Full paginated list with category chip filters and pull-to-refresh.
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -47,9 +47,19 @@ export default function TransactionsScreen({ navigation }: Props) {
   // Build chip list: All + unique categories that appear in data
   const chips = useMemo(() => {
     const used = new Set(transactions.map((t) => t.category));
-    const cats = CATEGORIES.filter((c) => used.has(c.id));
+    const cats = CATEGORIES.filter((c) => {
+      if (!used.has(c.id)) return false;
+      if (typeFilter === "all") return true;
+      return c.type === typeFilter;
+    });
     return [ALL_FILTER, ...cats];
-  }, [transactions]);
+  }, [transactions, typeFilter]);
+
+  useEffect(() => {
+    if (!chips.some((c) => c.id === activeFilter)) {
+      setActiveFilter("all");
+    }
+  }, [chips, activeFilter]);
 
   // Apply filters
   const filtered = useMemo(() => {
