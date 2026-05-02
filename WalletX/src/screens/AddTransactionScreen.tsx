@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Colors from "../constants/colors";
@@ -17,6 +18,7 @@ import GradientButton from "../components/GradientButton";
 import ErrorMessage from "../components/ErrorMessage";
 import { useWallet } from "../context/WalletContext";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../utils/categories";
+import { formatDate, formatTime } from "../utils/formatDate";
 import { StackScreenProps } from "@react-navigation/stack";
 import type { AppStackParamList, TransactionType } from "../types";
 
@@ -30,6 +32,9 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
+  const [transactionDate, setTransactionDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState("");
@@ -42,8 +47,44 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
     if (!amount || isNaN(parsed) || parsed <= 0)
       e.amount = "Enter a valid amount";
     if (!category) e.category = "Select a category";
+    const now = new Date();
+    if (transactionDate.getTime() > now.getTime()) {
+      e.date = "Date/time cannot be in the future";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
+  };
+
+  const handleDateChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS !== "ios") setShowDatePicker(false);
+    if (!selectedDate) return;
+    const now = new Date();
+    const nextDate = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      transactionDate.getHours(),
+      transactionDate.getMinutes(),
+      0,
+      0,
+    );
+    setTransactionDate(nextDate > now ? now : nextDate);
+  };
+
+  const handleTimeChange = (_event: any, selectedTime?: Date) => {
+    if (Platform.OS !== "ios") setShowTimePicker(false);
+    if (!selectedTime) return;
+    const now = new Date();
+    const nextDate = new Date(
+      transactionDate.getFullYear(),
+      transactionDate.getMonth(),
+      transactionDate.getDate(),
+      selectedTime.getHours(),
+      selectedTime.getMinutes(),
+      0,
+      0,
+    );
+    setTransactionDate(nextDate > now ? now : nextDate);
   };
 
   const handleSubmit = async () => {
@@ -56,7 +97,7 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
         amount: parseFloat(parseFloat(amount).toFixed(2)),
         category,
         note: note.trim(),
-        date: new Date(),
+        date: transactionDate,
       });
       navigation.goBack();
     } catch (err: any) {
@@ -142,6 +183,60 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
             />
           </View>
           {errors.amount && <Text style={styles.errText}>{errors.amount}</Text>}
+
+          {/* Date */}
+          <Text style={styles.sectionLabel}>Date</Text>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowDatePicker((prev) => !prev)}
+          >
+            <MaterialCommunityIcons
+              name="calendar-blank"
+              size={20}
+              color={Colors.textMuted}
+            />
+            <Text style={styles.dateText}>{formatDate(transactionDate)}</Text>
+            <Text style={styles.dateHint}>Backdate only</Text>
+          </TouchableOpacity>
+          {errors.date && <Text style={styles.errText}>{errors.date}</Text>}
+          {showDatePicker && (
+            <View style={styles.datePickerWrap}>
+              <DateTimePicker
+                value={transactionDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "inline" : "default"}
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            </View>
+          )}
+
+          {/* Time */}
+          <Text style={styles.sectionLabel}>Time</Text>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowTimePicker((prev) => !prev)}
+          >
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={20}
+              color={Colors.textMuted}
+            />
+            <Text style={styles.dateText}>{formatTime(transactionDate)}</Text>
+            <Text style={styles.dateHint}>Backdate only</Text>
+          </TouchableOpacity>
+          {errors.date && <Text style={styles.errText}>{errors.date}</Text>}
+          {showTimePicker && (
+            <View style={styles.datePickerWrap}>
+              <DateTimePicker
+                value={transactionDate}
+                mode="time"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleTimeChange}
+                maximumDate={new Date()}
+              />
+            </View>
+          )}
 
           {/* Category Grid */}
           <Text style={styles.sectionLabel}>Category</Text>
@@ -315,6 +410,35 @@ const styles = StyleSheet.create({
     color: Colors.expense,
     fontSize: FontSize.xs,
     marginBottom: Spacing.xs,
+  },
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  dateText: {
+    color: Colors.text,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    flex: 1,
+  },
+  dateHint: {
+    color: Colors.textDim,
+    fontSize: FontSize.xs,
+  },
+  datePickerWrap: {
+    marginTop: Spacing.xs,
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Platform.OS === "ios" ? Spacing.xs : 0,
   },
   submitBtn: { marginTop: Spacing.lg },
 });

@@ -40,6 +40,11 @@ export function formatRelativeDate(date: DateLike): string {
   return formatDate(d);
 }
 
+/** "Today - 10:33 PM" */
+export function formatRelativeDateTime(date: DateLike): string {
+  return `${formatRelativeDate(date)} - ${formatTime(date)}`;
+}
+
 /** "08:30 AM" */
 export function formatTime(date: DateLike): string {
   return toDate(date).toLocaleTimeString("en-US", {

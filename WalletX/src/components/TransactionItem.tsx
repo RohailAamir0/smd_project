@@ -13,7 +13,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Colors from "../constants/colors";
 import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
 import { formatTransactionAmount } from "../utils/formatCurrency";
-import { formatRelativeDate } from "../utils/formatDate";
+import { formatRelativeDateTime } from "../utils/formatDate";
 import { getCategoryById } from "../utils/categories";
 import type { Transaction } from "../types";
 
@@ -65,8 +65,10 @@ export default function TransactionItem({
           </Text>
           <Text style={styles.date}>
             {transaction.note
-              ? `${transaction.note} · ${formatRelativeDate(transaction.date)}`
-              : formatRelativeDate(transaction.date)}
+              ? `${transaction.note} · ${formatRelativeDateTime(
+                  transaction.date,
+                )}`
+              : formatRelativeDateTime(transaction.date)}
           </Text>
         </View>
 

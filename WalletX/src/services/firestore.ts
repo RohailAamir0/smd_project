@@ -19,6 +19,7 @@ import {
   increment,
   runTransaction,
   Unsubscribe,
+  Timestamp,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -100,7 +101,7 @@ export async function addTransaction(
     tx.set(txRef, {
       userId,
       ...txData,
-      date: serverTimestamp(),
+      date: Timestamp.fromDate(txData.date),
       createdAt: serverTimestamp(),
     });
 
