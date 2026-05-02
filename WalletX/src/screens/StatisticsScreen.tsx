@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useIsFocused } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BarChart } from "react-native-gifted-charts";
 import Colors from "../constants/colors";
@@ -22,6 +23,8 @@ import type { TransactionType } from "../types";
 export default function StatisticsScreen() {
   const { transactions } = useWallet();
   const [tab, setTab] = useState<TransactionType>("expense"); // 'expense' | 'income'
+  const isFocused = useIsFocused();
+  const [groupBy, setGroupBy] = useState<"month" | "week">("month");
 
   // ── Month navigation ──────────────────────────────────────────────────────
   const [monthOffset, setMonthOffset] = useState(0); // 0 = current month
@@ -32,24 +35,58 @@ export default function StatisticsScreen() {
     return d;
   }, [monthOffset]);
 
-  // ── Filter transactions to selected month ─────────────────────────────────
-  const monthlyTxs = useMemo(() => {
+  // ── Week navigation (Sunday to Saturday) ────────────────────────────────
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week
+  const selectedWeekStart = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - d.getDay() + weekOffset * 7);
+    return d;
+  }, [weekOffset]);
+  const selectedWeekEnd = useMemo(() => {
+    const d = new Date(selectedWeekStart);
+    d.setDate(d.getDate() + 6);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, [selectedWeekStart]);
+
+  const formatWeekRange = (start: Date, end: Date) => {
+    const startLabel = start.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const endLabel = end.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    return `${startLabel} - ${endLabel}`;
+  };
+
+  // ── Filter transactions to selected period ───────────────────────────────
+  const periodTxs = useMemo(() => {
     return transactions.filter((tx) => {
       const d =
         tx.date && (tx.date as any).toDate
           ? (tx.date as any).toDate()
           : new Date(tx.date as any);
-      return (
-        d.getMonth() === selectedMonth.getMonth() &&
-        d.getFullYear() === selectedMonth.getFullYear()
-      );
-    });
-  }, [transactions, selectedMonth]);
 
-  // ── Category totals for current tab & month ───────────────────────────────
+      if (groupBy === "month") {
+        return (
+          d.getMonth() === selectedMonth.getMonth() &&
+          d.getFullYear() === selectedMonth.getFullYear()
+        );
+      }
+
+      return d >= selectedWeekStart && d <= selectedWeekEnd;
+    });
+  }, [transactions, selectedMonth, selectedWeekStart, selectedWeekEnd, groupBy]);
+
+  // ── Category totals for current tab & period ──────────────────────────────
   const categoryTotals = useMemo(() => {
     const map: Record<string, number> = {};
-    monthlyTxs
+    periodTxs
       .filter((t) => t.type === tab)
       .forEach((t) => {
         map[t.category] = (map[t.category] ?? 0) + t.amount;
@@ -58,36 +95,59 @@ export default function StatisticsScreen() {
       .map(([category, total]) => ({ category, total }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 6);
-  }, [monthlyTxs, tab]);
+  }, [periodTxs, tab]);
 
-  // ── Bar chart data (last 7 days) ──────────────────────────────────────────
+  // ── Bar chart data (selected period) ──────────────────────────────────────
   const barData = useMemo(() => {
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      return d;
-    });
-    return days.map((day) => {
-      const total = transactions
-        .filter((tx) => {
-          const txDate =
-            tx.date && (tx.date as any).toDate
-              ? (tx.date as any).toDate()
-              : new Date(tx.date as any);
-          return (
-            tx.type === tab && txDate.toDateString() === day.toDateString()
-          );
-        })
-        .reduce((s, tx) => s + tx.amount, 0);
+    const totalsByDay = new Map<number, number>();
+    periodTxs
+      .filter((tx) => tx.type === tab)
+      .forEach((tx) => {
+        const txDate =
+          tx.date && (tx.date as any).toDate
+            ? (tx.date as any).toDate()
+            : new Date(tx.date as any);
+        const dayKey =
+          groupBy === "month"
+            ? txDate.getDate()
+            : Math.floor(
+                (txDate.getTime() - selectedWeekStart.getTime()) /
+                  (1000 * 60 * 60 * 24)
+              );
+        totalsByDay.set(dayKey, (totalsByDay.get(dayKey) ?? 0) + tx.amount);
+      });
+
+    if (groupBy === "week") {
+      return Array.from({ length: 7 }, (_, i) => {
+        const total = totalsByDay.get(i) ?? 0;
+        const labelDate = new Date(selectedWeekStart);
+        labelDate.setDate(labelDate.getDate() + i);
+        return {
+          value: total,
+          label: labelDate.toLocaleDateString("en-US", { weekday: "short" }),
+          frontColor: total > 0 ? Colors.accent1 : Colors.border,
+        };
+      });
+    }
+
+    const daysInMonth = new Date(
+      selectedMonth.getFullYear(),
+      selectedMonth.getMonth() + 1,
+      0
+    ).getDate();
+
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const dayNumber = i + 1;
+      const total = totalsByDay.get(dayNumber) ?? 0;
       return {
         value: total,
-        label: day.toLocaleDateString("en-US", { weekday: "short" }),
+        label: String(dayNumber),
         frontColor: total > 0 ? Colors.accent1 : Colors.border,
       };
     });
-  }, [transactions, tab]);
+  }, [periodTxs, selectedMonth, selectedWeekStart, tab, groupBy, isFocused]);
 
-  const totalForMonth = monthlyTxs
+  const totalForPeriod = periodTxs
     .filter((t) => t.type === tab)
     .reduce((s, t) => s + t.amount, 0);
 
@@ -100,10 +160,31 @@ export default function StatisticsScreen() {
         {/* Header */}
         <Text style={styles.pageTitle}>Statistics</Text>
 
-        {/* Month Selector */}
+        {/* Grouping Selector */}
+        <View style={styles.tabRow}>
+          {(["month", "week"] as const).map((g) => (
+            <TouchableOpacity
+              key={g}
+              style={[styles.tabBtn, groupBy === g && styles.tabBtnActive]}
+              onPress={() => setGroupBy(g)}
+            >
+              <Text
+                style={[styles.tabTxt, groupBy === g && styles.tabTxtActive]}
+              >
+                {g === "month" ? "Month" : "Week"}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Period Selector */}
         <View style={styles.monthRow}>
           <TouchableOpacity
-            onPress={() => setMonthOffset((m) => m - 1)}
+            onPress={() =>
+              groupBy === "month"
+                ? setMonthOffset((m) => m - 1)
+                : setWeekOffset((w) => w - 1)
+            }
             style={styles.monthBtn}
           >
             <MaterialCommunityIcons
@@ -113,17 +194,27 @@ export default function StatisticsScreen() {
             />
           </TouchableOpacity>
           <Text style={styles.monthLabel}>
-            {formatMonthYear(selectedMonth)}
+            {groupBy === "month"
+              ? formatMonthYear(selectedMonth)
+              : formatWeekRange(selectedWeekStart, selectedWeekEnd)}
           </Text>
           <TouchableOpacity
-            onPress={() => setMonthOffset((m) => Math.min(m + 1, 0))}
+            onPress={() =>
+              groupBy === "month"
+                ? setMonthOffset((m) => Math.min(m + 1, 0))
+                : setWeekOffset((w) => Math.min(w + 1, 0))
+            }
             style={styles.monthBtn}
-            disabled={monthOffset === 0}
+            disabled={groupBy === "month" ? monthOffset === 0 : weekOffset === 0}
           >
             <MaterialCommunityIcons
               name="chevron-right"
               size={22}
-              color={monthOffset === 0 ? Colors.textDim : Colors.text}
+              color={
+                (groupBy === "month" ? monthOffset : weekOffset) === 0
+                  ? Colors.textDim
+                  : Colors.text
+              }
             />
           </TouchableOpacity>
         </View>
@@ -154,18 +245,21 @@ export default function StatisticsScreen() {
               { color: tab === "income" ? Colors.income : Colors.expense },
             ]}
           >
-            {formatCurrency(totalForMonth)}
+            {formatCurrency(totalForPeriod)}
           </Text>
         </View>
 
         {/* Bar Chart */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Last 7 Days</Text>
+          <Text style={styles.chartTitle}>
+            {groupBy === "month" ? "This Month" : "This Week"}
+          </Text>
           {barData.some((d) => d.value > 0) ? (
             <BarChart
+              key={`chart-${groupBy}-${monthOffset}-${weekOffset}-${tab}-${isFocused}`}
               data={barData}
-              barWidth={28}
-              spacing={16}
+              barWidth={groupBy === "month" ? 12 : 24}
+              spacing={groupBy === "month" ? 6 : 12}
               roundedTop
               roundedBottom
               hideRules
