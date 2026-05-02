@@ -119,6 +119,7 @@ export default function TransactionsScreen({ navigation }: Props) {
         keyExtractor={(c) => c.id}
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.chipsList}
         contentContainerStyle={styles.chips}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -133,7 +134,7 @@ export default function TransactionsScreen({ navigation }: Props) {
           >
             <MaterialCommunityIcons
               name={item.icon as any}
-              size={14}
+              size={18}
               color={activeFilter === item.id ? item.color : Colors.textMuted}
             />
             <Text
@@ -239,6 +240,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
     gap: Spacing.sm,
+  },
+  chipsList: {
+    flexGrow: 0,
+    paddingVertical: Spacing.md,
   },
   chip: {
     flexDirection: "row",
