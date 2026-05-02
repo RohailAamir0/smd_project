@@ -21,12 +21,16 @@ interface TransactionItemProps {
   transaction: Transaction;
   onPress: () => void;
   onLongPress?: () => void;
+  selecting?: boolean;
+  selected?: boolean;
 }
 
 export default function TransactionItem({
   transaction,
   onPress,
   onLongPress,
+  selecting = false,
+  selected = false,
 }: TransactionItemProps) {
   const category = getCategoryById(transaction.category);
   const isIncome = transaction.type === "income";
@@ -40,7 +44,7 @@ export default function TransactionItem({
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <TouchableOpacity
-        style={styles.row}
+        style={[styles.row, selected && styles.rowSelected]}
         onPress={onPress}
         onLongPress={onLongPress}
         onPressIn={handlePressIn}
@@ -72,15 +76,24 @@ export default function TransactionItem({
           </Text>
         </View>
 
-        {/* Amount */}
-        <Text
-          style={[
-            styles.amount,
-            { color: isIncome ? Colors.income : Colors.expense },
-          ]}
-        >
-          {formatTransactionAmount(transaction.amount, transaction.type)}
-        </Text>
+        {/* Amount + Selection */}
+        <View style={styles.right}>
+          <Text
+            style={[
+              styles.amount,
+              { color: isIncome ? Colors.income : Colors.expense },
+            ]}
+          >
+            {formatTransactionAmount(transaction.amount, transaction.type)}
+          </Text>
+          {selecting && (
+            <MaterialCommunityIcons
+              name={selected ? "check-circle" : "checkbox-blank-circle-outline"}
+              size={20}
+              color={selected ? Colors.accent1 : Colors.textDim}
+            />
+          )}
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -97,6 +110,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
+  },
+  rowSelected: {
+    borderColor: Colors.accent1,
+    backgroundColor: Colors.accent1 + "12",
   },
   iconWrap: {
     width: 44,
@@ -120,5 +137,9 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
+  },
+  right: {
+    alignItems: "flex-end",
+    gap: 6,
   },
 });

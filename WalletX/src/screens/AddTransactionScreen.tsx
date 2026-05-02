@@ -8,6 +8,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ToastAndroid,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,22 +22,41 @@ import { useWallet } from "../context/WalletContext";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../utils/categories";
 import { formatDate, formatTime } from "../utils/formatDate";
 import { StackScreenProps } from "@react-navigation/stack";
-import type { AppStackParamList, TransactionType } from "../types";
+import type {
+  AppStackParamList,
+  DateLike,
+  Transaction,
+  TransactionType,
+} from "../types";
 
 type Props = StackScreenProps<AppStackParamList, "AddTransaction">;
 
+function toDate(date: DateLike): Date {
+  if (date && typeof (date as { toDate?: () => Date }).toDate === "function") {
+    return (date as { toDate: () => Date }).toDate();
+  }
+  return date as Date;
+}
+
 export default function AddTransactionScreen({ navigation, route }: Props) {
-  const { addTransaction } = useWallet();
+  const { addTransaction, updateTransaction, deleteTransaction } = useWallet();
+  const editingTx: Transaction | undefined = route?.params?.transaction;
+  const isEditing = Boolean(editingTx);
   const [type, setType] = useState<TransactionType>(
-    route?.params?.type ?? "expense",
+    editingTx?.type ?? route?.params?.type ?? "expense",
   );
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("");
-  const [note, setNote] = useState("");
-  const [transactionDate, setTransactionDate] = useState(new Date());
+  const [amount, setAmount] = useState(
+    editingTx ? editingTx.amount.toFixed(2) : "",
+  );
+  const [category, setCategory] = useState(editingTx?.category ?? "");
+  const [note, setNote] = useState(editingTx?.note ?? "");
+  const [transactionDate, setTransactionDate] = useState(
+    editingTx ? toDate(editingTx.date) : new Date(),
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState("");
 
@@ -91,20 +112,63 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
     if (!validate()) return;
     setLoading(true);
     setGeneralError("");
+    const payload = {
+      type,
+      amount: parseFloat(parseFloat(amount).toFixed(2)),
+      category,
+      note: note.trim(),
+      date: transactionDate,
+    };
     try {
-      await addTransaction({
-        type,
-        amount: parseFloat(parseFloat(amount).toFixed(2)),
-        category,
-        note: note.trim(),
-        date: transactionDate,
-      });
+      if (editingTx) {
+        await updateTransaction(editingTx.id, payload, {
+          type: editingTx.type,
+          amount: editingTx.amount,
+        });
+      } else {
+        await addTransaction(payload);
+      }
       navigation.goBack();
     } catch (err: any) {
       setGeneralError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = () => {
+    if (!editingTx) return;
+    Alert.alert(
+      "Delete Transaction",
+      "Are you sure you want to delete this transaction?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            setGeneralError("");
+            try {
+              await deleteTransaction(editingTx.id, {
+                type: editingTx.type,
+                amount: editingTx.amount,
+              });
+              if (Platform.OS === "android") {
+                ToastAndroid.show("Transaction deleted", ToastAndroid.SHORT);
+              } else {
+                Alert.alert("Deleted", "Transaction deleted.");
+              }
+              navigation.goBack();
+            } catch (err: any) {
+              setGeneralError(err.message);
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -129,8 +193,24 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
                 color={Colors.text}
               />
             </TouchableOpacity>
-            <Text style={styles.title}>Add Transaction</Text>
-            <View style={{ width: 40 }} />
+            <Text style={styles.title}>
+              {isEditing ? "Edit Transaction" : "Add Transaction"}
+            </Text>
+            {isEditing ? (
+              <TouchableOpacity
+                onPress={handleDelete}
+                style={styles.deleteBtn}
+                disabled={loading || deleting}
+              >
+                <MaterialCommunityIcons
+                  name="trash-can-outline"
+                  size={22}
+                  color={Colors.expense}
+                />
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 40 }} />
+            )}
           </View>
 
           {/* Type Toggle */}
@@ -289,9 +369,10 @@ export default function AddTransactionScreen({ navigation, route }: Props) {
           <ErrorMessage message={generalError} />
 
           <GradientButton
-            label="Save Transaction"
+            label={isEditing ? "Save Changes" : "Save Transaction"}
             onPress={handleSubmit}
             loading={loading}
+            disabled={deleting}
             colors={
               type === "income"
                 ? [Colors.income, "#059669"]
@@ -315,6 +396,16 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteBtn: {
     width: 40,
     height: 40,
     borderRadius: Radius.md,

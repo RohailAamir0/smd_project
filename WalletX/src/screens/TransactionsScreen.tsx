@@ -43,6 +43,9 @@ export default function TransactionsScreen({ navigation }: Props) {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<FilterType>("all");
   const [refreshing, setRefreshing] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   // Build chip list: All + unique categories that appear in data
   const chips = useMemo(() => {
@@ -61,6 +64,17 @@ export default function TransactionsScreen({ navigation }: Props) {
     }
   }, [chips, activeFilter]);
 
+  useEffect(() => {
+    const current = new Set(transactions.map((t) => t.id));
+    setSelectedIds((prev) => {
+      const next = new Set<string>();
+      prev.forEach((id) => {
+        if (current.has(id)) next.add(id);
+      });
+      return next;
+    });
+  }, [transactions]);
+
   // Apply filters
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
@@ -75,16 +89,58 @@ export default function TransactionsScreen({ navigation }: Props) {
     setTimeout(() => setRefreshing(false), 800);
   };
 
-  const handleLongPress = (tx: Transaction) => {
+  const enterSelectMode = (tx: Transaction) => {
+    setSelectMode(true);
+    setSelectedIds(new Set([tx.id]));
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelection = (txId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(txId)) next.delete(txId);
+      else next.add(txId);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.size === 0 || deleting) return;
     Alert.alert(
-      "Delete Transaction",
-      "Are you sure you want to delete this transaction?",
+      "Delete Transactions",
+      `Delete ${selectedIds.size} selected transaction${
+        selectedIds.size === 1 ? "" : "s"
+      }?`,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteTransaction(tx.id, tx),
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              const targets = transactions.filter((t) =>
+                selectedIds.has(t.id),
+              );
+              await Promise.all(
+                targets.map((tx) =>
+                  deleteTransaction(tx.id, {
+                    type: tx.type,
+                    amount: tx.amount,
+                  }),
+                ),
+              );
+              exitSelectMode();
+            } catch (err: any) {
+              Alert.alert("Delete failed", err?.message ?? "Try again.");
+            } finally {
+              setDeleting(false);
+            }
+          },
         },
       ],
     );
@@ -94,13 +150,40 @@ export default function TransactionsScreen({ navigation }: Props) {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Transactions</Text>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => navigation.navigate("AddTransaction", undefined)}
-        >
-          <MaterialCommunityIcons name="plus" size={22} color={Colors.white} />
-        </TouchableOpacity>
+        {selectMode ? (
+          <TouchableOpacity style={styles.iconBtn} onPress={exitSelectMode}>
+            <MaterialCommunityIcons name="close" size={22} color={Colors.text} />
+          </TouchableOpacity>
+        ) : (
+          <Text style={styles.title}>Transactions</Text>
+        )}
+        {selectMode ? (
+          <View style={styles.selectHeaderRight}>
+            <Text style={styles.selectCount}>{selectedIds.size} selected</Text>
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={handleDeleteSelected}
+              disabled={selectedIds.size === 0 || deleting}
+            >
+              <MaterialCommunityIcons
+                name="trash-can-outline"
+                size={22}
+                color={
+                  selectedIds.size === 0 || deleting
+                    ? Colors.textDim
+                    : Colors.expense
+                }
+              />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => navigation.navigate("AddTransaction", undefined)}
+          >
+            <MaterialCommunityIcons name="plus" size={22} color={Colors.white} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Type toggle */}
@@ -191,8 +274,18 @@ export default function TransactionsScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <TransactionItem
               transaction={item}
-              onPress={() => {}}
-              onLongPress={() => handleLongPress(item)}
+              onPress={() =>
+                selectMode
+                  ? toggleSelection(item.id)
+                  : navigation.navigate("AddTransaction", {
+                      transaction: item,
+                    })
+              }
+              onLongPress={() =>
+                selectMode ? toggleSelection(item.id) : enterSelectMode(item)
+              }
+              selecting={selectMode}
+              selected={selectedIds.has(item.id)}
             />
           )}
         />
@@ -210,10 +303,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
+  iconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.card,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
   title: {
     color: Colors.text,
     fontSize: FontSize.xl,
     fontWeight: FontWeight.extrabold,
+  },
+  selectHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  selectCount: {
+    color: Colors.textMuted,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
   },
   addBtn: {
     width: 38,
@@ -222,6 +335,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  deleteBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.card,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   typeRow: {
     flexDirection: "row",

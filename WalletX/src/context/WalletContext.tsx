@@ -12,6 +12,7 @@ import { useAuth } from "./AuthContext";
 import {
   subscribeToTransactions,
   addTransaction as addTx,
+  updateTransaction as updateTx,
   deleteTransaction as deleteTx,
   subscribeToUser,
 } from "../services/firestore";
@@ -110,6 +111,24 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     [user],
   );
 
+  /** Update a transaction and adjust balance based on changes */
+  const updateTransaction = useCallback(
+    async (
+      txId: string,
+      txData: NewTransactionData,
+      original: Pick<Transaction, "type" | "amount">,
+    ) => {
+      if (!user) return;
+      try {
+        await updateTx(txId, txData, original, user.uid);
+      } catch (e: any) {
+        dispatch({ type: "SET_ERROR", payload: e.message });
+        throw e;
+      }
+    },
+    [user],
+  );
+
   // ── Derived data ─────────────────────────────────────────────────────────────
 
   /** Last 5 transactions for the Home screen */
@@ -131,6 +150,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     totalIncome,
     totalExpenses,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
   };
 

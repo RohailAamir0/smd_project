@@ -140,7 +140,9 @@ export default function HomeScreen({ navigation }: Props) {
               <TransactionItem
                 key={tx.id}
                 transaction={tx}
-                onPress={() => {}}
+                onPress={() =>
+                  navigation.navigate("AddTransaction", { transaction: tx })
+                }
               />
             ))
           )}

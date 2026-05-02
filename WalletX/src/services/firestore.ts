@@ -5,9 +5,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
-  addDoc,
-  deleteDoc,
   collection,
   query,
   where,
@@ -111,6 +108,34 @@ export async function addTransaction(
   });
 
   return newTxId;
+}
+
+/**
+ * Update a transaction AND apply the balance delta based on changes.
+ *
+ * @param {string} txId
+ * @param {NewTransactionData} txData
+ * @param {Pick<Transaction, 'type' | 'amount'>} original
+ * @param {string} userId
+ */
+export async function updateTransaction(
+  txId: string,
+  txData: NewTransactionData,
+  original: Pick<Transaction, "type" | "amount">,
+  userId: string,
+): Promise<void> {
+  const originalEffect =
+    original.type === "income" ? original.amount : -original.amount;
+  const nextEffect = txData.type === "income" ? txData.amount : -txData.amount;
+  const balanceDelta = nextEffect - originalEffect;
+
+  await runTransaction(db, async (tx) => {
+    tx.update(doc(db, "transactions", txId), {
+      ...txData,
+      date: Timestamp.fromDate(txData.date),
+    });
+    tx.update(doc(db, "users", userId), { balance: increment(balanceDelta) });
+  });
 }
 
 /**

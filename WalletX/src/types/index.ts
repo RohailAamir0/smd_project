@@ -79,6 +79,11 @@ export interface WalletContextType extends WalletState {
   totalIncome: number;
   totalExpenses: number;
   addTransaction: (data: NewTransactionData) => Promise<void>;
+  updateTransaction: (
+    txId: string,
+    data: NewTransactionData,
+    original: Pick<Transaction, "type" | "amount">,
+  ) => Promise<void>;
   deleteTransaction: (
     txId: string,
     txData: Pick<Transaction, "type" | "amount">,
@@ -95,7 +100,9 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Main: undefined;
-  AddTransaction: { type?: TransactionType } | undefined;
+  AddTransaction:
+    | { type?: TransactionType; transaction?: Transaction }
+    | undefined;
 };
 
 export type TabParamList = {
