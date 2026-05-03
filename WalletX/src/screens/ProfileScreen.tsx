@@ -88,8 +88,16 @@ export default function ProfileScreen() {
       label: "Edit Profile",
       onPress: () => navigation.navigate("EditProfile"),
     },
-    { icon: "information-outline", label: "About WalletX", onPress: () => {} },
-    { icon: "delete-outline", label: "Delete Account", onPress: () => {} },
+    {
+      icon: "information-outline",
+      label: "About WalletX",
+      onPress: () => {
+        Alert.alert(
+          "WalletX",
+          "WalletX is a Semester Project made by Rohail Amir and Muhammad Taha Ali for the course Software for Mobile Development.",
+        );
+      },
+    },
   ];
 
   return (

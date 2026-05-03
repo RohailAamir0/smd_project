@@ -24,7 +24,6 @@ import { db } from "./firebase";
 import type { UserProfile, Transaction, NewTransactionData } from "../types";
 
 // ── Collection references ─────────────────────────────────────────────────────
-const usersCol = () => collection(db, "users");
 const transactionsCol = () => collection(db, "transactions");
 
 // ─── User Document ────────────────────────────────────────────────────────────
