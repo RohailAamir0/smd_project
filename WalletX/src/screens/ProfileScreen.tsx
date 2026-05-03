@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import Colors from "../constants/colors";
 import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
@@ -19,8 +21,10 @@ import { useWallet } from "../context/WalletContext";
 import ErrorMessage from "../components/ErrorMessage";
 import { logoutUser } from "../services/auth";
 import { formatCurrency } from "../utils/formatCurrency";
+import type { AppStackParamList } from "../types";
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<StackNavigationProp<AppStackParamList>>();
   const { user, userProfile } = useAuth();
   const { balance, totalIncome, totalExpenses, transactions } = useWallet();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -46,7 +50,7 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const initials = (userProfile?.name ?? user?.displayName ?? "U")
+  const initials = (user?.displayName ?? userProfile?.name ?? "U")
     .split(" ")
     .map((w) => w[0])
     .join("")
@@ -79,7 +83,11 @@ export default function ProfileScreen() {
   };
 
   const menuItems: MenuItem[] = [
-    { icon: "account-edit-outline", label: "Edit Profile", onPress: () => {} },
+    {
+      icon: "account-edit-outline",
+      label: "Edit Profile",
+      onPress: () => navigation.navigate("EditProfile"),
+    },
     { icon: "bell-outline", label: "Notifications", onPress: () => {} },
     {
       icon: "shield-lock-outline",
@@ -107,7 +115,7 @@ export default function ProfileScreen() {
             <Text style={styles.initials}>{initials}</Text>
           </LinearGradient>
           <Text style={styles.name}>
-            {userProfile?.name ?? user?.displayName ?? "User"}
+            {user?.displayName ?? userProfile?.name ?? "User"}
           </Text>
           <Text style={styles.email}>{user?.email}</Text>
         </View>

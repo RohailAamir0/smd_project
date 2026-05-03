@@ -123,9 +123,7 @@ export default function TransactionsScreen({ navigation }: Props) {
           onPress: async () => {
             setDeleting(true);
             try {
-              const targets = transactions.filter((t) =>
-                selectedIds.has(t.id),
-              );
+              const targets = transactions.filter((t) => selectedIds.has(t.id));
               await Promise.all(
                 targets.map((tx) =>
                   deleteTransaction(tx.id, {
@@ -152,7 +150,11 @@ export default function TransactionsScreen({ navigation }: Props) {
       <View style={styles.header}>
         {selectMode ? (
           <TouchableOpacity style={styles.iconBtn} onPress={exitSelectMode}>
-            <MaterialCommunityIcons name="close" size={22} color={Colors.text} />
+            <MaterialCommunityIcons
+              name="close"
+              size={22}
+              color={Colors.text}
+            />
           </TouchableOpacity>
         ) : (
           <Text style={styles.title}>Transactions</Text>
@@ -181,7 +183,11 @@ export default function TransactionsScreen({ navigation }: Props) {
             style={styles.addBtn}
             onPress={() => navigation.navigate("AddTransaction", undefined)}
           >
-            <MaterialCommunityIcons name="plus" size={22} color={Colors.white} />
+            <MaterialCommunityIcons
+              name="plus"
+              size={22}
+              color={Colors.white}
+            />
           </TouchableOpacity>
         )}
       </View>

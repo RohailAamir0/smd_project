@@ -15,6 +15,7 @@ import {
   serverTimestamp,
   increment,
   runTransaction,
+  updateDoc,
   Unsubscribe,
   Timestamp,
 } from "firebase/firestore";
@@ -55,6 +56,16 @@ export async function getUserDoc(uid: string): Promise<UserProfile | null> {
   return snap.exists()
     ? ({ id: snap.id, ...snap.data() } as UserProfile)
     : null;
+}
+
+/**
+ * Update fields on a user document.
+ */
+export async function updateUserDoc(
+  uid: string,
+  data: Partial<Omit<UserProfile, "id" | "createdAt">>,
+): Promise<void> {
+  await updateDoc(doc(db, "users", uid), data);
 }
 
 /**

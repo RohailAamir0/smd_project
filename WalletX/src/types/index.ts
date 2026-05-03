@@ -103,6 +103,7 @@ export type AppStackParamList = {
   AddTransaction:
     | { type?: TransactionType; transaction?: Transaction }
     | undefined;
+  EditProfile: undefined;
 };
 
 export type TabParamList = {

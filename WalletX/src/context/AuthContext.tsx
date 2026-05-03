@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "firebase/auth";
 import { subscribeToAuth } from "../services/auth";
-import { getUserDoc } from "../services/firestore";
+import { subscribeToUser } from "../services/firestore";
 import type { AuthContextType, UserProfile } from "../types";
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -16,14 +16,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Subscribe to Firebase Auth state changes
+    let userUnsub: (() => void) | null = null;
     const unsubscribe = subscribeToAuth(async (firebaseUser) => {
+      setLoading(true);
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        // Fetch the Firestore user document when logged in
-        const profile = await getUserDoc(firebaseUser.uid);
-        setUserProfile(profile);
+        // Subscribe to the Firestore user document for live updates
+        userUnsub = subscribeToUser(firebaseUser.uid, (profile) => {
+          setUserProfile(profile);
+        });
       } else {
+        if (userUnsub) {
+          userUnsub();
+          userUnsub = null;
+        }
         setUserProfile(null);
       }
 
@@ -31,7 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Cleanup listener on unmount
-    return unsubscribe;
+    return () => {
+      if (userUnsub) userUnsub();
+      unsubscribe();
+    };
   }, []);
 
   const value: AuthContextType = {

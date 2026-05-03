@@ -81,7 +81,13 @@ export default function StatisticsScreen() {
 
       return d >= selectedWeekStart && d <= selectedWeekEnd;
     });
-  }, [transactions, selectedMonth, selectedWeekStart, selectedWeekEnd, groupBy]);
+  }, [
+    transactions,
+    selectedMonth,
+    selectedWeekStart,
+    selectedWeekEnd,
+    groupBy,
+  ]);
 
   // ── Category totals for current tab & period ──────────────────────────────
   const categoryTotals = useMemo(() => {
@@ -112,7 +118,7 @@ export default function StatisticsScreen() {
             ? txDate.getDate()
             : Math.floor(
                 (txDate.getTime() - selectedWeekStart.getTime()) /
-                  (1000 * 60 * 60 * 24)
+                  (1000 * 60 * 60 * 24),
               );
         totalsByDay.set(dayKey, (totalsByDay.get(dayKey) ?? 0) + tx.amount);
       });
@@ -133,7 +139,7 @@ export default function StatisticsScreen() {
     const daysInMonth = new Date(
       selectedMonth.getFullYear(),
       selectedMonth.getMonth() + 1,
-      0
+      0,
     ).getDate();
 
     return Array.from({ length: daysInMonth }, (_, i) => {
@@ -145,7 +151,7 @@ export default function StatisticsScreen() {
         frontColor: total > 0 ? Colors.accent1 : Colors.border,
       };
     });
-  }, [periodTxs, selectedMonth, selectedWeekStart, tab, groupBy, isFocused]);
+  }, [periodTxs, selectedMonth, selectedWeekStart, tab, groupBy]);
 
   const totalForPeriod = periodTxs
     .filter((t) => t.type === tab)
@@ -205,7 +211,9 @@ export default function StatisticsScreen() {
                 : setWeekOffset((w) => Math.min(w + 1, 0))
             }
             style={styles.monthBtn}
-            disabled={groupBy === "month" ? monthOffset === 0 : weekOffset === 0}
+            disabled={
+              groupBy === "month" ? monthOffset === 0 : weekOffset === 0
+            }
           >
             <MaterialCommunityIcons
               name="chevron-right"

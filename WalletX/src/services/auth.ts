@@ -6,8 +6,14 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  updateEmail,
+  updatePassword,
+  sendEmailVerification,
+  verifyBeforeUpdateEmail,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   User,
   Unsubscribe,
 } from "firebase/auth";
@@ -74,6 +80,64 @@ export async function logoutUser(): Promise<void> {
  */
 export async function resetPassword(email: string): Promise<void> {
   await sendPasswordResetEmail(auth, email);
+}
+
+/**
+ * Reauthenticate the user using their current password.
+ * Required by Firebase before sensitive updates like email/password.
+ */
+export async function reauthenticateUser(
+  user: User,
+  currentPassword: string,
+): Promise<void> {
+  const email = user.email ?? "";
+  const credential = EmailAuthProvider.credential(email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+}
+
+/**
+ * Update the display name on the Firebase Auth profile.
+ */
+export async function updateUserName(user: User, name: string): Promise<void> {
+  await updateProfile(user, { displayName: name });
+}
+
+/**
+ * Update the email on the Firebase Auth profile.
+ */
+export async function updateUserEmail(
+  user: User,
+  email: string,
+): Promise<void> {
+  await updateEmail(user, email);
+}
+
+/**
+ * Send a verification email to the current user.
+ */
+export async function sendVerificationEmail(user: User): Promise<void> {
+  await sendEmailVerification(user);
+}
+
+/**
+ * Request email change with verification.
+ * The email updates only after the user verifies the link.
+ */
+export async function requestEmailChange(
+  user: User,
+  newEmail: string,
+): Promise<void> {
+  await verifyBeforeUpdateEmail(user, newEmail);
+}
+
+/**
+ * Update the password on the Firebase Auth profile.
+ */
+export async function updateUserPassword(
+  user: User,
+  password: string,
+): Promise<void> {
+  await updatePassword(user, password);
 }
 
 /**

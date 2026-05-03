@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import AuthNavigator from "./AuthNavigator";
 import TabNavigator from "./TabNavigator";
 import AddTransactionScreen from "../screens/AddTransactionScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
 import type { AppStackParamList } from "../types";
 
 const Stack = createStackNavigator<AppStackParamList>();
@@ -35,6 +36,11 @@ export default function AppNavigator() {
             name="AddTransaction"
             component={AddTransactionScreen}
             options={{ presentation: "modal", animationEnabled: true }}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfileScreen}
+            options={{ headerShown: false }}
           />
         </>
       ) : (
