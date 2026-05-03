@@ -70,18 +70,6 @@ export default function HomeScreen({ navigation }: Props) {
             <Text style={styles.greeting}>{greeting()},</Text>
             <Text style={styles.name}>{userProfile?.name ?? "Friend"} 👋</Text>
           </View>
-          <TouchableOpacity
-            style={styles.notifBtn}
-            onPress={() =>
-              Alert.alert("Notifications", "No new notifications.")
-            }
-          >
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={24}
-              color={Colors.text}
-            />
-          </TouchableOpacity>
         </View>
 
         {/* ── Balance Card ──────────────────────────────────────────────────── */}

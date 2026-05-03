@@ -88,14 +88,8 @@ export default function ProfileScreen() {
       label: "Edit Profile",
       onPress: () => navigation.navigate("EditProfile"),
     },
-    { icon: "bell-outline", label: "Notifications", onPress: () => {} },
-    {
-      icon: "shield-lock-outline",
-      label: "Privacy & Security",
-      onPress: () => {},
-    },
-    { icon: "help-circle-outline", label: "Help & Support", onPress: () => {} },
     { icon: "information-outline", label: "About WalletX", onPress: () => {} },
+    { icon: "delete-outline", label: "Delete Account", onPress: () => {} },
   ];
 
   return (
