@@ -98,7 +98,7 @@ export default function HomeScreen({ navigation }: Props) {
           <ActionButton
             icon="chart-line"
             label="Statistics"
-            onPress={() => navigation.navigate("Transactions")}
+            onPress={() => navigation.navigate("Statistics")}
           />
           <ActionButton
             icon="dots-horizontal-circle-outline"
