@@ -15,6 +15,8 @@ export type DateLike = Date | FirestoreTimestamp;
 
 export type TransactionType = "income" | "expense";
 
+export type UserRole = "member" | "admin";
+
 export interface Transaction {
   id: string;
   userId: string;
@@ -31,7 +33,17 @@ export interface UserProfile {
   name: string;
   email: string;
   balance: number;
+  role: UserRole;
+  emailVerified?: boolean;
   createdAt?: DateLike;
+}
+
+export interface AdminUserSummary {
+  uid: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  emailVerified: boolean | null;
 }
 
 export interface Category {
@@ -49,6 +61,8 @@ export interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   isLoggedIn: boolean;
+  isAdmin: boolean;
+  isEmailVerified: boolean;
 }
 
 // ── Wallet Context ─────────────────────────────────────────────────────────────
@@ -104,6 +118,7 @@ export type AppStackParamList = {
     | { type?: TransactionType; transaction?: Transaction }
     | undefined;
   EditProfile: undefined;
+  AdminUsers: undefined;
 };
 
 export type TabParamList = {

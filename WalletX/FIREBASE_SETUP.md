@@ -64,15 +64,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can only read/write their own profile
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    function isAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
-    // Users can only access their own transactions
+    // Users can read/write own profile, admins can manage all profiles
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Users can access their own transactions, admins can manage all
     match /transactions/{txId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow read, write: if request.auth != null
+        && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if request.auth != null
+        && (request.auth.uid == request.resource.data.userId || isAdmin());
     }
   }
 }
@@ -99,6 +107,8 @@ users/{userId}
   - name:      string
   - email:     string
   - balance:   number   ← always kept in sync atomically
+  - role:      'member' | 'admin'
+  - emailVerified: boolean (optional)
   - createdAt: timestamp
 
 transactions/{txId}
@@ -110,6 +120,16 @@ transactions/{txId}
   - date:      timestamp
   - createdAt: timestamp
 ```
+
+---
+
+## Admin Notes (App-Only)
+
+- App-only admin tools can list users and update roles from Firestore.
+- Deleting an Auth account is not possible without Firebase Admin SDK.
+  The admin screen deletes Firestore profile + transactions only.
+- Bootstrap first admin by setting `role: "admin"` in the user's document.
+- Legacy user documents without `role` default to `member` in the app.
 
 ---
 

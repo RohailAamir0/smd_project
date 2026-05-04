@@ -10,6 +10,7 @@ import AuthNavigator from "./AuthNavigator";
 import TabNavigator from "./TabNavigator";
 import AddTransactionScreen from "../screens/AddTransactionScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
+import AdminUsersScreen from "../screens/AdminUsersScreen";
 import type { AppStackParamList } from "../types";
 
 const Stack = createStackNavigator<AppStackParamList>();
@@ -40,6 +41,11 @@ export default function AppNavigator() {
           <Stack.Screen
             name="EditProfile"
             component={EditProfileScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AdminUsers"
+            component={AdminUsersScreen}
             options={{ headerShown: false }}
           />
         </>

@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "firebase/auth";
 import { subscribeToAuth } from "../services/auth";
-import { subscribeToUser } from "../services/firestore";
+import { subscribeToUser, updateUserDoc } from "../services/firestore";
 import type { AuthContextType, UserProfile } from "../types";
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -44,11 +44,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!user || !userProfile) return;
+    if (userProfile.emailVerified === user.emailVerified) return;
+    void updateUserDoc(user.uid, { emailVerified: user.emailVerified });
+  }, [user, userProfile]);
+
   const value: AuthContextType = {
     user, // Firebase Auth user object (or null)
     userProfile, // Firestore user doc { name, email, balance, ... }
     loading, // True while auth state is being resolved
     isLoggedIn: !!user,
+    isAdmin: userProfile?.role === "admin",
+    isEmailVerified: !!user?.emailVerified,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

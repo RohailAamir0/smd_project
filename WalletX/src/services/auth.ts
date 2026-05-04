@@ -46,7 +46,13 @@ export async function registerUser(
   await updateProfile(user, { displayName: name });
 
   // Create corresponding Firestore document
-  await createUserDoc(user.uid, { name, email, balance: 0 });
+  await createUserDoc(user.uid, {
+    name,
+    email,
+    balance: 0,
+    role: "member",
+    emailVerified: user.emailVerified,
+  });
 
   return user;
 }

@@ -19,15 +19,16 @@ import { Spacing, Radius, FontSize, FontWeight } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useWallet } from "../context/WalletContext";
 import ErrorMessage from "../components/ErrorMessage";
-import { logoutUser } from "../services/auth";
+import { logoutUser, sendVerificationEmail } from "../services/auth";
 import { formatCurrency } from "../utils/formatCurrency";
 import type { AppStackParamList } from "../types";
 
 export default function ProfileScreen() {
   const navigation = useNavigation<StackNavigationProp<AppStackParamList>>();
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, isAdmin, isEmailVerified } = useAuth();
   const { balance, totalIncome, totalExpenses, transactions } = useWallet();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [sendingVerification, setSendingVerification] = useState(false);
   const [generalError, setGeneralError] = useState("");
 
   const handleLogout = () => {
@@ -48,6 +49,23 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const handleSendVerification = async () => {
+    if (!user) {
+      setGeneralError("No authenticated user found.");
+      return;
+    }
+    setSendingVerification(true);
+    setGeneralError("");
+    try {
+      await sendVerificationEmail(user);
+      Alert.alert("Email Sent", "Check your inbox to verify your email.");
+    } catch (e: any) {
+      setGeneralError(e.message ?? "Failed to send verification email.");
+    } finally {
+      setSendingVerification(false);
+    }
   };
 
   const initials = (user?.displayName ?? userProfile?.name ?? "U")
@@ -88,6 +106,26 @@ export default function ProfileScreen() {
       label: "Edit Profile",
       onPress: () => navigation.navigate("EditProfile"),
     },
+    ...(isAdmin
+      ? [
+          {
+            icon: "shield-account-outline",
+            label: isEmailVerified
+              ? "Admin Dashboard"
+              : "Admin Dashboard (Verify email)",
+            onPress: () => {
+              if (!isEmailVerified) {
+                Alert.alert(
+                  "Verification Required",
+                  "Verify your email to access admin tools.",
+                );
+                return;
+              }
+              navigation.navigate("AdminUsers");
+            },
+          },
+        ]
+      : []),
     {
       icon: "information-outline",
       label: "About WalletX",
@@ -132,6 +170,39 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
           ))}
+        </View>
+
+        {/* Email Verification */}
+        <View style={styles.verifyCard}>
+          <View style={styles.verifyRow}>
+            <View style={styles.verifyIconWrap}>
+              <MaterialCommunityIcons
+                name={isEmailVerified ? "check-decagram" : "alert-decagram"}
+                size={18}
+                color={isEmailVerified ? Colors.income : Colors.expense}
+              />
+            </View>
+            <View style={styles.verifyTextWrap}>
+              <Text style={styles.verifyTitle}>Email Verification</Text>
+              <Text style={styles.verifySubtitle}>
+                {isEmailVerified
+                  ? "Your email is verified."
+                  : "Verify your email (You may need to restart app after verification)."}
+              </Text>
+            </View>
+            {!isEmailVerified && (
+              <TouchableOpacity
+                style={styles.verifyBtn}
+                onPress={handleSendVerification}
+                disabled={sendingVerification}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.verifyBtnText}>
+                  {sendingVerification ? "Sending..." : "Send Email"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Menu */}
@@ -295,5 +366,49 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
     fontSize: FontSize.xs,
     textAlign: "center",
+  },
+  verifyCard: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  verifyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  verifyIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.accent1 + "22",
+  },
+  verifyTextWrap: { flex: 1 },
+  verifyTitle: {
+    color: Colors.text,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+    marginBottom: 2,
+  },
+  verifySubtitle: {
+    color: Colors.textMuted,
+    fontSize: FontSize.xs,
+  },
+  verifyBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.accent1,
+  },
+  verifyBtnText: {
+    color: Colors.accent1,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
   },
 });

@@ -16,12 +16,28 @@ import {
   increment,
   runTransaction,
   updateDoc,
+  writeBatch,
   Unsubscribe,
   Timestamp,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
-import type { UserProfile, Transaction, NewTransactionData } from "../types";
+import type {
+  UserProfile,
+  UserRole,
+  AdminUserSummary,
+  Transaction,
+  NewTransactionData,
+} from "../types";
+
+type UserProfileDoc = Omit<UserProfile, "role"> & { role?: UserRole };
+
+function normalizeUserProfile(data: UserProfileDoc): UserProfile {
+  return {
+    ...data,
+    role: data.role ?? "member",
+  };
+}
 
 // ── Collection references ─────────────────────────────────────────────────────
 const transactionsCol = () => collection(db, "transactions");
@@ -36,10 +52,11 @@ const transactionsCol = () => collection(db, "transactions");
  */
 export async function createUserDoc(
   uid: string,
-  data: Omit<UserProfile, "id" | "createdAt">,
+  data: Omit<UserProfile, "id" | "createdAt" | "role"> & { role?: UserRole },
 ): Promise<void> {
   await setDoc(doc(db, "users", uid), {
     ...data,
+    role: data.role ?? "member",
     createdAt: serverTimestamp(),
   });
 }
@@ -53,7 +70,7 @@ export async function createUserDoc(
 export async function getUserDoc(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, "users", uid));
   return snap.exists()
-    ? ({ id: snap.id, ...snap.data() } as UserProfile)
+    ? normalizeUserProfile({ id: snap.id, ...snap.data() } as UserProfileDoc)
     : null;
 }
 
@@ -79,8 +96,47 @@ export function subscribeToUser(
   callback: (user: UserProfile) => void,
 ): Unsubscribe {
   return onSnapshot(doc(db, "users", uid), (snap) => {
-    if (snap.exists()) callback({ id: snap.id, ...snap.data() } as UserProfile);
+    if (snap.exists()) {
+      callback(
+        normalizeUserProfile({ id: snap.id, ...snap.data() } as UserProfileDoc),
+      );
+    }
   });
+}
+
+// ─── Admin Helpers (App-only) ───────────────────────────────────────────────
+
+export async function adminListUsers(): Promise<AdminUserSummary[]> {
+  const snap = await getDocs(collection(db, "users"));
+  return snap.docs.map((docSnap) => {
+    const data = docSnap.data() as UserProfileDoc;
+    return {
+      uid: docSnap.id,
+      name: data.name ?? "",
+      email: data.email ?? "",
+      role: data.role ?? "member",
+      emailVerified:
+        typeof data.emailVerified === "boolean" ? data.emailVerified : null,
+    };
+  });
+}
+
+export async function adminSetUserRole(
+  uid: string,
+  role: UserRole,
+): Promise<void> {
+  await updateDoc(doc(db, "users", uid), { role });
+}
+
+export async function adminDeleteUserData(uid: string): Promise<void> {
+  const txSnap = await getDocs(
+    query(transactionsCol(), where("userId", "==", uid)),
+  );
+
+  const batch = writeBatch(db);
+  txSnap.docs.forEach((txDoc) => batch.delete(txDoc.ref));
+  batch.delete(doc(db, "users", uid));
+  await batch.commit();
 }
 
 // ─── Transactions ─────────────────────────────────────────────────────────────
