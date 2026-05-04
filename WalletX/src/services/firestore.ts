@@ -93,13 +93,15 @@ export async function updateUserDoc(
  */
 export function subscribeToUser(
   uid: string,
-  callback: (user: UserProfile) => void,
+  callback: (user: UserProfile | null) => void,
 ): Unsubscribe {
   return onSnapshot(doc(db, "users", uid), (snap) => {
     if (snap.exists()) {
       callback(
         normalizeUserProfile({ id: snap.id, ...snap.data() } as UserProfileDoc),
       );
+    } else {
+      callback(null);
     }
   });
 }
@@ -129,6 +131,10 @@ export async function adminSetUserRole(
 }
 
 export async function adminDeleteUserData(uid: string): Promise<void> {
+  await deleteUserData(uid);
+}
+
+export async function deleteUserData(uid: string): Promise<void> {
   const txSnap = await getDocs(
     query(transactionsCol(), where("userId", "==", uid)),
   );

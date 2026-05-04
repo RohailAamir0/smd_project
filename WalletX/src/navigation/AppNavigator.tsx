@@ -11,12 +11,13 @@ import TabNavigator from "./TabNavigator";
 import AddTransactionScreen from "../screens/AddTransactionScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import AdminUsersScreen from "../screens/AdminUsersScreen";
+import CompleteProfileScreen from "../screens/CompleteProfileScreen";
 import type { AppStackParamList } from "../types";
 
 const Stack = createStackNavigator<AppStackParamList>();
 
 export default function AppNavigator() {
-  const { isLoggedIn, loading } = useAuth();
+  const { isLoggedIn, loading, needsProfileSetup } = useAuth();
 
   // Show a centered spinner while Firebase resolves the auth state
   if (loading) {
@@ -31,24 +32,32 @@ export default function AppNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isLoggedIn ? (
         // ── Authenticated routes ──────────────────────────────────────────────
-        <>
-          <Stack.Screen name="Main" component={TabNavigator} />
+        needsProfileSetup ? (
           <Stack.Screen
-            name="AddTransaction"
-            component={AddTransactionScreen}
-            options={{ presentation: "modal", animationEnabled: true }}
-          />
-          <Stack.Screen
-            name="EditProfile"
-            component={EditProfileScreen}
+            name="CompleteProfile"
+            component={CompleteProfileScreen}
             options={{ headerShown: false }}
           />
-          <Stack.Screen
-            name="AdminUsers"
-            component={AdminUsersScreen}
-            options={{ headerShown: false }}
-          />
-        </>
+        ) : (
+          <>
+            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen
+              name="AddTransaction"
+              component={AddTransactionScreen}
+              options={{ presentation: "modal", animationEnabled: true }}
+            />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AdminUsers"
+              component={AdminUsersScreen}
+              options={{ headerShown: false }}
+            />
+          </>
+        )
       ) : (
         // ── Unauthenticated routes ────────────────────────────────────────────
         <Stack.Screen name="Auth" component={AuthNavigator as any} />

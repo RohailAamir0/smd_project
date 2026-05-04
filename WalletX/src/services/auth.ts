@@ -14,6 +14,7 @@ import {
   sendPasswordResetEmail,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  deleteUser,
   User,
   Unsubscribe,
 } from "firebase/auth";
@@ -144,6 +145,13 @@ export async function updateUserPassword(
   password: string,
 ): Promise<void> {
   await updatePassword(user, password);
+}
+
+/**
+ * Delete the current Firebase Auth user.
+ */
+export async function deleteAuthUser(user: User): Promise<void> {
+  await deleteUser(user);
 }
 
 /**

@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null); // Firebase Auth user
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null); // Firestore user doc
   const [loading, setLoading] = useState<boolean>(true); // True while resolving
+  const [needsProfileSetup, setNeedsProfileSetup] = useState<boolean>(false);
 
   useEffect(() => {
     // Subscribe to Firebase Auth state changes
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Subscribe to the Firestore user document for live updates
         userUnsub = subscribeToUser(firebaseUser.uid, (profile) => {
           setUserProfile(profile);
+          setNeedsProfileSetup(profile === null);
         });
       } else {
         if (userUnsub) {
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userUnsub = null;
         }
         setUserProfile(null);
+        setNeedsProfileSetup(false);
       }
 
       setLoading(false);
@@ -57,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoggedIn: !!user,
     isAdmin: userProfile?.role === "admin",
     isEmailVerified: !!user?.emailVerified,
+    needsProfileSetup,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

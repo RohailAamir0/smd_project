@@ -72,6 +72,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     // Real-time balance listener (from user doc — source of truth)
     const unsubUser = subscribeToUser(user.uid, (profile) => {
+      if (!profile) {
+        dispatch({ type: "SET_BALANCE", payload: 0 });
+        return;
+      }
       dispatch({ type: "SET_BALANCE", payload: profile.balance ?? 0 });
     });
 

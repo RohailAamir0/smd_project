@@ -63,6 +63,7 @@ export interface AuthContextType {
   isLoggedIn: boolean;
   isAdmin: boolean;
   isEmailVerified: boolean;
+  needsProfileSetup: boolean;
 }
 
 // ── Wallet Context ─────────────────────────────────────────────────────────────
@@ -119,6 +120,7 @@ export type AppStackParamList = {
     | undefined;
   EditProfile: undefined;
   AdminUsers: undefined;
+  CompleteProfile: undefined;
 };
 
 export type TabParamList = {
