@@ -20,7 +20,11 @@ import GradientButton from "../components/GradientButton";
 import ErrorMessage from "../components/ErrorMessage";
 import { useAuth } from "../context/AuthContext";
 import { deleteAuthUser, updateUserName } from "../services/auth";
-import { createUserDoc, createWallet, deleteUserData } from "../services/firestore.ts";
+import {
+  createUserDoc,
+  createWallet,
+  deleteUserData,
+} from "../services/firestore.ts";
 
 export default function CompleteProfileScreen() {
   const { user } = useAuth();

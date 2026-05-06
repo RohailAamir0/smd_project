@@ -83,7 +83,9 @@ export default function BalanceCard({
           <Text style={styles.label}>No wallets yet</Text>
           <Text style={styles.balance}>$0.00</Text>
           <View style={styles.row}>
-            <Text style={styles.emptyHint}>Create a wallet to get started.</Text>
+            <Text style={styles.emptyHint}>
+              Create a wallet to get started.
+            </Text>
           </View>
         </LinearGradient>
       </Animated.View>

@@ -224,9 +224,7 @@ export function subscribeToWallets(
 ): Unsubscribe {
   const q = query(walletsCol(userId), orderBy("createdAt", "asc"));
   return onSnapshot(q, (snap) => {
-    const wallets = snap.docs.map(
-      (d) => ({ id: d.id, ...d.data() }) as Wallet,
-    );
+    const wallets = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Wallet);
     callback(wallets);
   });
 }
@@ -296,7 +294,9 @@ export async function addTransaction(
     });
 
     // 2. Update the wallet balance atomically
-    tx.update(walletDoc(userId, walletId), { balance: increment(balanceDelta) });
+    tx.update(walletDoc(userId, walletId), {
+      balance: increment(balanceDelta),
+    });
   });
 
   return newTxId;
@@ -328,7 +328,9 @@ export async function updateTransaction(
       ...txData,
       date: Timestamp.fromDate(txData.date),
     });
-    tx.update(walletDoc(userId, walletId), { balance: increment(balanceDelta) });
+    tx.update(walletDoc(userId, walletId), {
+      balance: increment(balanceDelta),
+    });
   });
 }
 
@@ -351,7 +353,9 @@ export async function deleteTransaction(
 
   await runTransaction(db, async (tx) => {
     tx.delete(doc(walletTransactionsCol(userId, walletId), txId));
-    tx.update(walletDoc(userId, walletId), { balance: increment(balanceDelta) });
+    tx.update(walletDoc(userId, walletId), {
+      balance: increment(balanceDelta),
+    });
   });
 }
 
@@ -395,7 +399,10 @@ export function subscribeToTransactions(
     orderBy("date", "desc"),
   );
   return onSnapshot(q, (snap) => {
-    const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Transaction[];
+    const list = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    })) as Transaction[];
     callback(list);
   });
 }

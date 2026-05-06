@@ -20,7 +20,13 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Colors from "../constants/colors";
-import { Spacing, Radius, FontSize, FontWeight, Shadow } from "../constants/theme";
+import {
+  Spacing,
+  Radius,
+  FontSize,
+  FontWeight,
+  Shadow,
+} from "../constants/theme";
 import { useWallet } from "../context/WalletContext";
 import { useAuth } from "../context/AuthContext";
 import GradientButton from "../components/GradientButton";
@@ -31,7 +37,12 @@ import {
   getTransactionsBeforeDate,
   getTransactionsInRange,
 } from "../services/firestore";
-import type { AppStackParamList, DateLike, Transaction, Wallet } from "../types";
+import type {
+  AppStackParamList,
+  DateLike,
+  Transaction,
+  Wallet,
+} from "../types";
 import { StackScreenProps } from "@react-navigation/stack";
 
 type Props = StackScreenProps<AppStackParamList, "DataExport">;
@@ -72,7 +83,15 @@ function startOfDay(date: Date): Date {
 }
 
 function endOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
 }
 
 function formatNumber(value: number): string {
@@ -114,9 +133,7 @@ function buildTransactionRows(
     .sort((a, b) => toJsDate(a.date).getTime() - toJsDate(b.date).getTime())
     .map((tx) => {
       const wallet = walletMap.get(tx.walletId);
-      const walletBalance = wallet
-        ? wallet.initialBalance + wallet.balance
-        : 0;
+      const walletBalance = wallet ? wallet.initialBalance + wallet.balance : 0;
       return {
         rowType: "Transaction",
         date: toJsDate(tx.date),
@@ -318,7 +335,7 @@ async function saveWithSaf(
       });
     }
     return fileUri;
-  } catch (error) {
+  } catch {
     await AsyncStorage.removeItem(EXPORT_DIR_KEY);
     directoryUri = await ensureAndroidExportDirectory();
     const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
@@ -350,7 +367,7 @@ async function saveWithAndroidFallback(
   try {
     const uri = await saveWithSaf(fileName, mimeType, content);
     return { uri, usedSaf: true };
-  } catch (error) {
+  } catch {
     if (typeof content === "string") {
       const fileUri = `${exportDirectory}${fileName}`;
       await FileSystem.writeAsStringAsync(fileUri, content, {
@@ -425,10 +442,7 @@ export default function DataExportScreen({ navigation }: Props) {
     [wallets, selectedWalletIds],
   );
 
-  const handleDateChange = (
-    _event: DateTimePickerEvent,
-    selected?: Date,
-  ) => {
+  const handleDateChange = (_event: DateTimePickerEvent, selected?: Date) => {
     if (_event.type === "dismissed") {
       if (Platform.OS !== "ios") setActivePicker(null);
       return;
@@ -636,7 +650,11 @@ export default function DataExportScreen({ navigation }: Props) {
           await FileSystem.writeAsStringAsync(fileUri, jsonContent, {
             encoding: FileSystem.EncodingType.UTF8,
           });
-          await shareFileToDocuments(fileUri, "application/json", "public.json");
+          await shareFileToDocuments(
+            fileUri,
+            "application/json",
+            "public.json",
+          );
           Alert.alert("Export Ready", "Choose Files to save the JSON.");
         }
       } else {
@@ -649,7 +667,6 @@ export default function DataExportScreen({ navigation }: Props) {
           exportRows,
         );
         const pdf = await Print.printToFileAsync({ html });
-        const fileName = `${baseName}.pdf`;
         await shareFileToDocuments(pdf.uri, "application/pdf", "com.adobe.pdf");
         Alert.alert("Export Ready", "Choose Files to send or save the PDF.");
       }
@@ -667,7 +684,11 @@ export default function DataExportScreen({ navigation }: Props) {
           style={styles.iconBtn}
           onPress={() => navigation.goBack()}
         >
-          <MaterialCommunityIcons name="chevron-left" size={24} color={Colors.text} />
+          <MaterialCommunityIcons
+            name="chevron-left"
+            size={24}
+            color={Colors.text}
+          />
         </TouchableOpacity>
         <Text style={styles.title}>Data Export</Text>
         <View style={styles.headerSpacer} />
@@ -681,7 +702,11 @@ export default function DataExportScreen({ navigation }: Props) {
               style={styles.dateButton}
               onPress={() => setActivePicker("start")}
             >
-              <MaterialCommunityIcons name="calendar-blank" size={18} color={Colors.textMuted} />
+              <MaterialCommunityIcons
+                name="calendar-blank"
+                size={18}
+                color={Colors.textMuted}
+              />
               <View>
                 <Text style={styles.dateLabel}>Start</Text>
                 <Text style={styles.dateValue}>{formatDate(startDate)}</Text>
@@ -691,7 +716,11 @@ export default function DataExportScreen({ navigation }: Props) {
               style={styles.dateButton}
               onPress={() => setActivePicker("end")}
             >
-              <MaterialCommunityIcons name="calendar-blank" size={18} color={Colors.textMuted} />
+              <MaterialCommunityIcons
+                name="calendar-blank"
+                size={18}
+                color={Colors.textMuted}
+              />
               <View>
                 <Text style={styles.dateLabel}>End</Text>
                 <Text style={styles.dateValue}>{formatDate(endDate)}</Text>
@@ -727,9 +756,17 @@ export default function DataExportScreen({ navigation }: Props) {
             style={styles.selectWalletsBtn}
             onPress={() => setWalletModalVisible(true)}
           >
-            <MaterialCommunityIcons name="wallet-outline" size={20} color={Colors.text} />
+            <MaterialCommunityIcons
+              name="wallet-outline"
+              size={20}
+              color={Colors.text}
+            />
             <Text style={styles.selectWalletsText}>Choose wallets</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textDim} />
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={20}
+              color={Colors.textDim}
+            />
           </TouchableOpacity>
         </View>
 
@@ -745,7 +782,10 @@ export default function DataExportScreen({ navigation }: Props) {
                   onPress={() => setExportFormat(format)}
                 >
                   <Text
-                    style={[styles.formatText, active && styles.formatTextActive]}
+                    style={[
+                      styles.formatText,
+                      active && styles.formatTextActive,
+                    ]}
                   >
                     {format.toUpperCase()}
                   </Text>
@@ -780,7 +820,11 @@ export default function DataExportScreen({ navigation }: Props) {
                 style={styles.iconBtn}
                 onPress={() => setWalletModalVisible(false)}
               >
-                <MaterialCommunityIcons name="close" size={22} color={Colors.text} />
+                <MaterialCommunityIcons
+                  name="close"
+                  size={22}
+                  color={Colors.text}
+                />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -791,7 +835,10 @@ export default function DataExportScreen({ navigation }: Props) {
                 const selected = selectedWalletIds.has(item.id);
                 return (
                   <TouchableOpacity
-                    style={[styles.walletRow, selected && styles.walletRowSelected]}
+                    style={[
+                      styles.walletRow,
+                      selected && styles.walletRowSelected,
+                    ]}
                     onPress={() => toggleWalletSelection(item.id)}
                   >
                     <View style={styles.walletIcon}>
@@ -806,7 +853,8 @@ export default function DataExportScreen({ navigation }: Props) {
                         {item.name}
                       </Text>
                       <Text style={styles.walletMeta}>
-                        Balance {formatCurrency(item.initialBalance + item.balance)}
+                        Balance{" "}
+                        {formatCurrency(item.initialBalance + item.balance)}
                       </Text>
                     </View>
                     <MaterialCommunityIcons

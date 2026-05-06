@@ -26,7 +26,8 @@ import type { AppStackParamList } from "../types";
 export default function ProfileScreen() {
   const navigation = useNavigation<StackNavigationProp<AppStackParamList>>();
   const { user, userProfile, isAdmin, isEmailVerified } = useAuth();
-  const { selectedWallet, totalIncome, totalExpenses, transactions } = useWallet();
+  const { selectedWallet, totalIncome, totalExpenses, transactions } =
+    useWallet();
   const [loggingOut, setLoggingOut] = useState(false);
   const [sendingVerification, setSendingVerification] = useState(false);
   const [generalError, setGeneralError] = useState("");

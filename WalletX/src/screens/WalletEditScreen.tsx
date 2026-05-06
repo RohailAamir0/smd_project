@@ -36,7 +36,7 @@ export default function WalletEditScreen({ navigation, route }: Props) {
   const walletId =
     mode === "add"
       ? undefined
-      : route?.params?.walletId ?? selectedWalletId ?? undefined;
+      : (route?.params?.walletId ?? selectedWalletId ?? undefined);
   const editingWallet = wallets.find((w) => w.id === walletId) ?? null;
   const isEditing = Boolean(editingWallet);
 

@@ -100,7 +100,11 @@ export default function WalletsListScreen({ navigation }: Props) {
       <View style={styles.header}>
         {selectMode ? (
           <TouchableOpacity style={styles.iconBtn} onPress={exitSelectMode}>
-            <MaterialCommunityIcons name="close" size={22} color={Colors.text} />
+            <MaterialCommunityIcons
+              name="close"
+              size={22}
+              color={Colors.text}
+            />
           </TouchableOpacity>
         ) : (
           <Text style={styles.title}>My Wallets</Text>
@@ -129,7 +133,11 @@ export default function WalletsListScreen({ navigation }: Props) {
             style={styles.addBtn}
             onPress={() => navigation.navigate("WalletEdit", { mode: "add" })}
           >
-            <MaterialCommunityIcons name="plus" size={22} color={Colors.white} />
+            <MaterialCommunityIcons
+              name="plus"
+              size={22}
+              color={Colors.white}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -146,7 +154,9 @@ export default function WalletsListScreen({ navigation }: Props) {
             color={Colors.textDim}
           />
           <Text style={styles.emptyTitle}>No wallets yet</Text>
-          <Text style={styles.emptySubtitle}>Tap + to add your first wallet</Text>
+          <Text style={styles.emptySubtitle}>
+            Tap + to add your first wallet
+          </Text>
         </View>
       ) : (
         <FlatList
