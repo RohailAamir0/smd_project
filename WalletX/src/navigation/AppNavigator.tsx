@@ -11,6 +11,7 @@ import TabNavigator from "./TabNavigator";
 import AddTransactionScreen from "../screens/AddTransactionScreen";
 import WalletEditScreen from "../screens/WalletEditScreen";
 import WalletsListScreen from "../screens/WalletsListScreen";
+import DataExportScreen from "../screens/DataExportScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import AdminUsersScreen from "../screens/AdminUsersScreen";
 import CompleteProfileScreen from "../screens/CompleteProfileScreen";
@@ -56,6 +57,11 @@ export default function AppNavigator() {
             <Stack.Screen
               name="WalletsList"
               component={WalletsListScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="DataExport"
+              component={DataExportScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

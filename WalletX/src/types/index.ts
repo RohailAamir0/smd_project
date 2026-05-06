@@ -147,6 +147,7 @@ export type AppStackParamList = {
     | undefined;
   WalletEdit: { walletId?: string; mode?: "add" | "edit" } | undefined;
   WalletsList: undefined;
+  DataExport: undefined;
   EditProfile: undefined;
   AdminUsers: undefined;
   CompleteProfile: undefined;

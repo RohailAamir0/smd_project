@@ -422,6 +422,42 @@ export async function getTransactionsByCategory(
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction);
 }
 
+/**
+ * Fetch transactions within a date range (inclusive), oldest first.
+ */
+export async function getTransactionsInRange(
+  userId: string,
+  walletId: string,
+  startDate: Date,
+  endDate: Date,
+): Promise<Transaction[]> {
+  const q = query(
+    walletTransactionsCol(userId, walletId),
+    where("date", ">=", Timestamp.fromDate(startDate)),
+    where("date", "<=", Timestamp.fromDate(endDate)),
+    orderBy("date", "asc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction);
+}
+
+/**
+ * Fetch transactions before a date (exclusive), oldest first.
+ */
+export async function getTransactionsBeforeDate(
+  userId: string,
+  walletId: string,
+  beforeDate: Date,
+): Promise<Transaction[]> {
+  const q = query(
+    walletTransactionsCol(userId, walletId),
+    where("date", "<", Timestamp.fromDate(beforeDate)),
+    orderBy("date", "asc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction);
+}
+
 // ─── Migration Helpers ───────────────────────────────────────────────────────
 
 export async function migrateLegacyTransactionsToDefaultWallet(

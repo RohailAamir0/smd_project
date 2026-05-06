@@ -117,6 +117,11 @@ export default function ProfileScreen() {
       label: "My Wallets",
       onPress: () => navigation.navigate("WalletsList"),
     },
+    {
+      icon: "file-export-outline" as keyof typeof MaterialCommunityIcons.glyphMap,
+      label: "Data Export",
+      onPress: () => navigation.navigate("DataExport"),
+    },
     ...(isAdmin
       ? [
           {
