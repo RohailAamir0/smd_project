@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useReducer,
   useCallback,
+  useRef,
 } from "react";
 import { useAuth } from "./AuthContext";
 import {
@@ -14,20 +15,27 @@ import {
   addTransaction as addTx,
   updateTransaction as updateTx,
   deleteTransaction as deleteTx,
-  subscribeToUser,
-} from "../services/firestore";
+  subscribeToWallets,
+  createWallet as createWalletDoc,
+  updateWallet as updateWalletDoc,
+  deleteWallet as deleteWalletDoc,
+  migrateLegacyTransactionsToDefaultWallet,
+} from "../services/firestore.ts";
 import type {
   WalletState,
   WalletAction,
   WalletContextType,
   NewTransactionData,
   Transaction,
+  NewWalletData,
+  Wallet,
 } from "../types";
 
 // ── State shape ───────────────────────────────────────────────────────────────
 const initialState: WalletState = {
   transactions: [], // All transactions for the current user
-  balance: 0, // Pulled from Firestore user doc (always accurate)
+  wallets: [],
+  selectedWalletId: null,
   loading: true,
   error: null,
 };
@@ -37,8 +45,10 @@ function walletReducer(state: WalletState, action: WalletAction): WalletState {
   switch (action.type) {
     case "SET_TRANSACTIONS":
       return { ...state, transactions: action.payload, loading: false };
-    case "SET_BALANCE":
-      return { ...state, balance: action.payload };
+    case "SET_WALLETS":
+      return { ...state, wallets: action.payload };
+    case "SET_SELECTED_WALLET":
+      return { ...state, selectedWalletId: action.payload };
     case "SET_ERROR":
       return { ...state, error: action.payload, loading: false };
     case "SET_LOADING":
@@ -54,36 +64,75 @@ const WalletContext = createContext<WalletContextType | null>(null);
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [state, dispatch] = useReducer(walletReducer, initialState);
+  const migrationInFlight = useRef(false);
 
   // Subscribe to real-time transactions when user is logged in
   useEffect(() => {
     if (!user) {
       dispatch({ type: "SET_TRANSACTIONS", payload: [] });
-      dispatch({ type: "SET_BALANCE", payload: 0 });
+      dispatch({ type: "SET_WALLETS", payload: [] });
+      dispatch({ type: "SET_SELECTED_WALLET", payload: null });
       return;
     }
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    // Real-time transactions listener
-    const unsubTx = subscribeToTransactions(user.uid, (txs) => {
-      dispatch({ type: "SET_TRANSACTIONS", payload: txs });
-    });
+    const unsubWallets = subscribeToWallets(
+      user.uid,
+      async (wallets: Wallet[]) => {
+        dispatch({ type: "SET_WALLETS", payload: wallets });
 
-    // Real-time balance listener (from user doc — source of truth)
-    const unsubUser = subscribeToUser(user.uid, (profile) => {
-      if (!profile) {
-        dispatch({ type: "SET_BALANCE", payload: 0 });
-        return;
-      }
-      dispatch({ type: "SET_BALANCE", payload: profile.balance ?? 0 });
-    });
+        if (wallets.length === 0 && !migrationInFlight.current) {
+          migrationInFlight.current = true;
+          try {
+            const newWalletId = await migrateLegacyTransactionsToDefaultWallet(
+              user.uid,
+            );
+            dispatch({ type: "SET_SELECTED_WALLET", payload: newWalletId });
+          } catch (e: any) {
+            dispatch({ type: "SET_ERROR", payload: e.message ?? String(e) });
+          } finally {
+            migrationInFlight.current = false;
+          }
+        }
+      },
+    );
+
+    return () => {
+      unsubWallets();
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (state.wallets.length === 0) return;
+    const hasSelected = state.wallets.some(
+      (wallet) => wallet.id === state.selectedWalletId,
+    );
+    if (!hasSelected) {
+      dispatch({ type: "SET_SELECTED_WALLET", payload: state.wallets[0].id });
+    }
+  }, [state.selectedWalletId, state.wallets]);
+
+  useEffect(() => {
+    if (!user || !state.selectedWalletId) {
+      dispatch({ type: "SET_TRANSACTIONS", payload: [] });
+      return;
+    }
+
+    dispatch({ type: "SET_LOADING", payload: true });
+
+    const unsubTx = subscribeToTransactions(
+      user.uid,
+      state.selectedWalletId,
+      (txs: Transaction[]) => {
+        dispatch({ type: "SET_TRANSACTIONS", payload: txs });
+      },
+    );
 
     return () => {
       unsubTx();
-      unsubUser();
     };
-  }, [user]);
+  }, [user, state.selectedWalletId]);
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
@@ -91,28 +140,34 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const addTransaction = useCallback(
     async (txData: NewTransactionData) => {
       if (!user) return;
+      if (!state.selectedWalletId) {
+        throw new Error("Select a wallet before adding a transaction.");
+      }
       try {
-        await addTx(user.uid, txData);
+        await addTx(user.uid, state.selectedWalletId, txData);
       } catch (e: any) {
         dispatch({ type: "SET_ERROR", payload: e.message });
         throw e;
       }
     },
-    [user],
+    [user, state.selectedWalletId],
   );
 
   /** Delete a transaction and reverse balance effect */
   const deleteTransaction = useCallback(
     async (txId: string, txData: Pick<Transaction, "type" | "amount">) => {
       if (!user) return;
+      if (!state.selectedWalletId) {
+        throw new Error("Select a wallet before deleting a transaction.");
+      }
       try {
-        await deleteTx(txId, txData, user.uid);
+        await deleteTx(txId, txData, user.uid, state.selectedWalletId);
       } catch (e: any) {
         dispatch({ type: "SET_ERROR", payload: e.message });
         throw e;
       }
     },
-    [user],
+    [user, state.selectedWalletId],
   );
 
   /** Update a transaction and adjust balance based on changes */
@@ -123,8 +178,57 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       original: Pick<Transaction, "type" | "amount">,
     ) => {
       if (!user) return;
+      if (!state.selectedWalletId) {
+        throw new Error("Select a wallet before updating a transaction.");
+      }
       try {
-        await updateTx(txId, txData, original, user.uid);
+        await updateTx(
+          txId,
+          txData,
+          original,
+          user.uid,
+          state.selectedWalletId,
+        );
+      } catch (e: any) {
+        dispatch({ type: "SET_ERROR", payload: e.message });
+        throw e;
+      }
+    },
+    [user, state.selectedWalletId],
+  );
+
+  const createWallet = useCallback(
+    async (data: NewWalletData) => {
+      if (!user) return;
+      try {
+        const walletId = await createWalletDoc(user.uid, data);
+        dispatch({ type: "SET_SELECTED_WALLET", payload: walletId });
+      } catch (e: any) {
+        dispatch({ type: "SET_ERROR", payload: e.message });
+        throw e;
+      }
+    },
+    [user],
+  );
+
+  const updateWallet = useCallback(
+    async (walletId: string, data: NewWalletData, original: number) => {
+      if (!user) return;
+      try {
+        await updateWalletDoc(user.uid, walletId, data, original);
+      } catch (e: any) {
+        dispatch({ type: "SET_ERROR", payload: e.message });
+        throw e;
+      }
+    },
+    [user],
+  );
+
+  const deleteWallet = useCallback(
+    async (walletId: string) => {
+      if (!user) return;
+      try {
+        await deleteWalletDoc(user.uid, walletId);
       } catch (e: any) {
         dispatch({ type: "SET_ERROR", payload: e.message });
         throw e;
@@ -148,14 +252,32 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
 
+  const selectedWallet =
+    state.wallets.find((wallet) => wallet.id === state.selectedWalletId) ??
+    null;
+  const selectedWalletIndex = Math.max(
+    0,
+    state.wallets.findIndex((wallet) => wallet.id === state.selectedWalletId),
+  );
+
+  const selectWallet = useCallback((walletId: string) => {
+    dispatch({ type: "SET_SELECTED_WALLET", payload: walletId });
+  }, []);
+
   const value: WalletContextType = {
     ...state,
+    selectedWallet,
+    selectedWalletIndex,
     recentTransactions,
     totalIncome,
     totalExpenses,
+    selectWallet,
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    createWallet,
+    updateWallet,
+    deleteWallet,
   };
 
   return (

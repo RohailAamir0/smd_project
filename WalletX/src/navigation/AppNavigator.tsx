@@ -9,6 +9,8 @@ import { useAuth } from "../context/AuthContext";
 import AuthNavigator from "./AuthNavigator";
 import TabNavigator from "./TabNavigator";
 import AddTransactionScreen from "../screens/AddTransactionScreen";
+import WalletEditScreen from "../screens/WalletEditScreen";
+import WalletsListScreen from "../screens/WalletsListScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import AdminUsersScreen from "../screens/AdminUsersScreen";
 import CompleteProfileScreen from "../screens/CompleteProfileScreen";
@@ -45,6 +47,16 @@ export default function AppNavigator() {
               name="AddTransaction"
               component={AddTransactionScreen}
               options={{ presentation: "modal", animationEnabled: true }}
+            />
+            <Stack.Screen
+              name="WalletEdit"
+              component={WalletEditScreen}
+              options={{ presentation: "modal", animationEnabled: true }}
+            />
+            <Stack.Screen
+              name="WalletsList"
+              component={WalletsListScreen}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="EditProfile"

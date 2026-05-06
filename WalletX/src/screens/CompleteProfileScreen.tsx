@@ -20,7 +20,7 @@ import GradientButton from "../components/GradientButton";
 import ErrorMessage from "../components/ErrorMessage";
 import { useAuth } from "../context/AuthContext";
 import { deleteAuthUser, updateUserName } from "../services/auth";
-import { createUserDoc, deleteUserData } from "../services/firestore";
+import { createUserDoc, createWallet, deleteUserData } from "../services/firestore.ts";
 
 export default function CompleteProfileScreen() {
   const { user } = useAuth();
@@ -53,6 +53,10 @@ export default function CompleteProfileScreen() {
         balance: 0,
         role: "member",
         emailVerified: user.emailVerified,
+      });
+      await createWallet(user.uid, {
+        name: "Main Wallet",
+        initialBalance: 0,
       });
     } catch (e: any) {
       setError(e.message ?? "Failed to save profile.");

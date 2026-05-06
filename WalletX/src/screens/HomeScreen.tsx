@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Colors from "../constants/colors";
 import { Spacing, FontSize, FontWeight, Radius } from "../constants/theme";
-import BalanceCard from "../components/BalanceCard";
+import BalanceCard from "../components/BalanceCard.tsx";
 import TransactionItem from "../components/TransactionItem";
 import ActionButton from "../components/ActionButton";
 import SkeletonLoader from "../components/SkeletonLoader";
@@ -31,8 +31,16 @@ type Props = CompositeScreenProps<
 
 export default function HomeScreen({ navigation }: Props) {
   const { userProfile } = useAuth();
-  const { balance, recentTransactions, totalIncome, totalExpenses, loading } =
-    useWallet();
+  const {
+    wallets,
+    selectedWalletId,
+    selectedWalletIndex,
+    selectWallet,
+    recentTransactions,
+    totalIncome,
+    totalExpenses,
+    loading,
+  } = useWallet();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -47,6 +55,10 @@ export default function HomeScreen({ navigation }: Props) {
     if (h < 12) return "Good morning";
     if (h < 18) return "Good afternoon";
     return "Good evening";
+  };
+
+  const handleFabPress = () => {
+    navigation.navigate("WalletEdit", { mode: "add" });
   };
 
   return (
@@ -73,16 +85,22 @@ export default function HomeScreen({ navigation }: Props) {
 
         {/* ── Balance Card ──────────────────────────────────────────────────── */}
         <BalanceCard
-          balance={balance}
+          wallets={wallets}
+          selectedWalletId={selectedWalletId}
+          selectedIndex={selectedWalletIndex}
           income={totalIncome}
           expenses={totalExpenses}
+          onSelectIndex={(index: number) => {
+            const wallet = wallets[index];
+            if (wallet) selectWallet(wallet.id);
+          }}
         />
 
         {/* ── Action Buttons ────────────────────────────────────────────────── */}
         <View style={styles.actions}>
           <ActionButton
             icon="arrow-down-circle-outline"
-            label="Top Up"
+            label="Income"
             onPress={() =>
               navigation.navigate("AddTransaction", { type: "income" })
             }
@@ -90,15 +108,20 @@ export default function HomeScreen({ navigation }: Props) {
           />
           <ActionButton
             icon="arrow-up-circle-outline"
-            label="Transfer"
+            label="Expense"
             onPress={() =>
               navigation.navigate("AddTransaction", { type: "expense" })
             }
           />
           <ActionButton
-            icon="chart-line"
-            label="Statistics"
-            onPress={() => navigation.navigate("Statistics")}
+            icon="wallet-outline"
+            label="Wallet Edit"
+            onPress={() =>
+              navigation.navigate("WalletEdit", {
+                walletId: selectedWalletId ?? undefined,
+                mode: "edit",
+              })
+            }
           />
           <ActionButton
             icon="dots-horizontal-circle-outline"
@@ -139,7 +162,7 @@ export default function HomeScreen({ navigation }: Props) {
       {/* ── FAB: Add Transaction ──────────────────────────────────────────────── */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate("AddTransaction")}
+        onPress={handleFabPress}
         activeOpacity={0.85}
       >
         <MaterialCommunityIcons name="plus" size={30} color={Colors.white} />

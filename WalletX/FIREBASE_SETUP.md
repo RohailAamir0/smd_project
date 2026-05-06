@@ -75,7 +75,20 @@ service cloud.firestore {
         && (request.auth.uid == userId || isAdmin());
     }
 
-    // Users can access their own transactions, admins can manage all
+    // Wallets are stored under each user
+    match /users/{userId}/wallets/{walletId} {
+      allow read, write: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
+
+      match /transactions/{txId} {
+        allow read, write: if request.auth != null
+          && (request.auth.uid == userId || isAdmin());
+        allow create: if request.auth != null
+          && (request.auth.uid == userId || isAdmin());
+      }
+    }
+
+    // Legacy transactions (kept for migration only)
     match /transactions/{txId} {
       allow read, write: if request.auth != null
         && (request.auth.uid == resource.data.userId || isAdmin());
@@ -106,12 +119,29 @@ Scan the QR code with **Expo Go** on your Android/iOS device.
 users/{userId}
   - name:      string
   - email:     string
-  - balance:   number   ← always kept in sync atomically
+  - balance:   number   ← legacy (for migration only)
   - role:      'member' | 'admin'
   - emailVerified: boolean (optional)
   - createdAt: timestamp
 
-transactions/{txId}
+users/{userId}/wallets/{walletId}
+  - userId:          string
+  - name:            string
+  - balance:         number
+  - initialBalance:  number
+  - createdAt:       timestamp
+
+users/{userId}/wallets/{walletId}/transactions/{txId}
+  - userId:    string
+  - walletId:  string
+  - type:      'income' | 'expense'
+  - category:  string
+  - amount:    number
+  - note:      string
+  - date:      timestamp
+  - createdAt: timestamp
+
+transactions/{txId}   ← legacy (for migration only)
   - userId:    string
   - type:      'income' | 'expense'
   - category:  string

@@ -26,7 +26,7 @@ import type { AppStackParamList } from "../types";
 export default function ProfileScreen() {
   const navigation = useNavigation<StackNavigationProp<AppStackParamList>>();
   const { user, userProfile, isAdmin, isEmailVerified } = useAuth();
-  const { balance, totalIncome, totalExpenses, transactions } = useWallet();
+  const { selectedWallet, totalIncome, totalExpenses, transactions } = useWallet();
   const [loggingOut, setLoggingOut] = useState(false);
   const [sendingVerification, setSendingVerification] = useState(false);
   const [generalError, setGeneralError] = useState("");
@@ -76,7 +76,13 @@ export default function ProfileScreen() {
     .slice(0, 2);
 
   const stats = [
-    { label: "Balance", value: formatCurrency(balance), color: Colors.accent1 },
+    {
+      label: "Balance",
+      value: formatCurrency(
+        (selectedWallet?.initialBalance ?? 0) + (selectedWallet?.balance ?? 0),
+      ),
+      color: Colors.accent1,
+    },
     {
       label: "Total Income",
       value: formatCurrency(totalIncome),
@@ -102,14 +108,19 @@ export default function ProfileScreen() {
 
   const menuItems: MenuItem[] = [
     {
-      icon: "account-edit-outline",
+      icon: "account-edit-outline" as keyof typeof MaterialCommunityIcons.glyphMap,
       label: "Edit Profile",
       onPress: () => navigation.navigate("EditProfile"),
+    },
+    {
+      icon: "wallet-outline" as keyof typeof MaterialCommunityIcons.glyphMap,
+      label: "My Wallets",
+      onPress: () => navigation.navigate("WalletsList"),
     },
     ...(isAdmin
       ? [
           {
-            icon: "shield-account-outline",
+            icon: "shield-account-outline" as keyof typeof MaterialCommunityIcons.glyphMap,
             label: isEmailVerified
               ? "Admin Dashboard"
               : "Admin Dashboard (Verify email)",
@@ -127,7 +138,7 @@ export default function ProfileScreen() {
         ]
       : []),
     {
-      icon: "information-outline",
+      icon: "information-outline" as keyof typeof MaterialCommunityIcons.glyphMap,
       label: "About WalletX",
       onPress: () => {
         Alert.alert(
